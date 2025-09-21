@@ -1,0 +1,23 @@
+/* src/components/Project/Project.css */
+.project-list {
+  background-color: #e8f5e9;
+  padding: 10px;
+  border-left: 5px solid #4caf50;
+}
+
+.project-list h1 {
+  color: #388e3c;
+}
+
+.project-list ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.project-list li {
+  background-color: white;
+  margin-bottom: 10px;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

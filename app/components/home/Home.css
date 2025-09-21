@@ -1,0 +1,18 @@
+/* src/components/Home/Home.css */
+.home-page {
+  padding: 30px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.home-page h1 {
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 10px;
+}
+
+.home-page p {
+  color: #666;
+  line-height: 1.6;
+}

@@ -1,0 +1,149 @@
+/* src/components/ProjectList.css */
+
+.project-list-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: sans-serif;
+  background-color: #f0f2f5;
+  min-height: 100vh;
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 30px;
+}
+
+.project-cards-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.project-card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 25px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.project-card h3 {
+  margin-top: 0;
+  color: #007bff;
+}
+
+.project-card p {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.6;
+  flex-grow: 1;
+}
+
+.card-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.run-btn,
+.edit-btn,
+.save-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+  color: #fff;
+}
+
+.run-btn {
+  background-color: #28a745;
+}
+
+.run-btn:hover {
+  background-color: #218838;
+}
+
+.run-btn.running {
+  background-color: #dc3545;
+}
+
+.run-btn.running:hover {
+  background-color: #c82333;
+}
+
+.edit-btn {
+  background-color: #007bff;
+}
+
+.edit-btn:hover {
+  background-color: #0056b3;
+}
+
+.save-btn {
+  background-color: #17a2b8;
+  margin-top: 15px;
+  width: 100%;
+}
+
+.save-btn:hover {
+  background-color: #138496;
+}
+
+.card-editor label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #555;
+}
+
+.card-editor input[type="text"],
+.card-editor textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.card-editor textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.pagination {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.page-btn {
+  background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  padding: 8px 15px;
+  margin: 0 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.page-btn.active {
+  background-color: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
+
+.page-btn:hover:not(.active) {
+  background-color: #d6d9dc;
+}
