@@ -37,6 +37,6 @@ export class ProjectService{
         };
         // 使用 push() 方法将对象添加到数组中
         projectList.push(newProject);
-        return new Array<ProjectInfoDO>()
+        return projectList;
     }
 }

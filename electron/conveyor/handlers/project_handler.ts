@@ -1,7 +1,7 @@
 import {ProjectService} from '@/electron/biz/project/project_service'
 import { handle } from '@/electron/main/shared'
 
-export const registerAppHandlers = (proService: ProjectService) => {
+export const registerprojectHandlers = () => {
   // App operations
-  handle('project_query_list', () => proService.getProjectList())
+  handle('project_query_list', () => ProjectService.getInstance().getProjectList())
 }

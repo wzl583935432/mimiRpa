@@ -4,6 +4,7 @@ import appIcon from '@/resources/build/mimiRpa.Png?asset'
 import { registerResourcesProtocol } from './protocols'
 import { registerWindowHandlers } from '@/electron/conveyor/handlers/window-handler'
 import { registerAppHandlers } from '@/electron/conveyor/handlers/app-handler'
+import { registerprojectHandlers } from '@/electron/conveyor/handlers/project_handler'
 
 export function createAppWindow(): void {
   // Register custom protocol for resources
@@ -33,6 +34,7 @@ export function createAppWindow(): void {
   // Register IPC events for the main window.
   registerWindowHandlers(mainWindow)
   registerAppHandlers(app)
+  registerprojectHandlers()
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()

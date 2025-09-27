@@ -1,4 +1,4 @@
-//import { conveyor } from '@/electron/conveyor/api'
+import { ProjectInfoDO } from "@/lib/Model/Project/ProjectInfoDO";
 
 export class ProjectService {
   private static instance: ProjectService;
@@ -12,9 +12,14 @@ export class ProjectService {
         return ProjectService.instance;
     }
 
-    public async GetProjectList(){
-      //  const projectApi = conveyor.project
-      //  return await projectApi.QueryProjectList();
+    public async GetProjectList() : Promise<Array<ProjectInfoDO> > {
+        const conveyor = window.conveyor;
+        const projectApi = conveyor.project
+        
+        const projectList = await projectApi.QueryProjectList();
+        console.warn('projectList', projectList);
+        return projectList;
     }
+
 
 }

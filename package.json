@@ -35,6 +35,9 @@
     ]
   },
   "dependencies": {
+    "@antv/x6": "^2.18.1",
+    "@antv/x6-react-components": "^2.0.9",
+    "@antv/x6-react-shape": "^2.2.3",
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
     "@radix-ui/react-slot": "^1.2.3",
