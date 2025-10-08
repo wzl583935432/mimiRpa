@@ -1,0 +1,25 @@
+.bordered-container {
+  /* Border for the div */
+  border: 2px solid #3498db; /* 2px thickness, solid line, blue color */
+  padding: 20px;            /* Space inside the border */
+  display: inline-block;    /* Makes the container only as wide as its content */
+  border-radius: 8px;       /* Optional: Rounded corners for a softer look */
+  background-color: #f0f8ff; /* Optional: Light background color */
+}
+
+.styled-button {
+  /* Basic button styling */
+  background-color: #3498db; /* Same blue as the border */
+  color: white;             /* White text */
+  padding: 10px 15px;       /* Vertical and horizontal padding */
+  border: none;             /* Remove default button border */
+  border-radius: 5px;       /* Optional: Rounded button corners */
+  cursor: pointer;          /* Shows a hand pointer on hover */
+  font-size: 16px;          /* Text size */
+  transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+/* Optional: Hover effect for the button */
+.styled-button:hover {
+  background-color: #2980b9; /* Slightly darker blue on hover */
+}

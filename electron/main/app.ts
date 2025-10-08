@@ -5,6 +5,8 @@ import { registerResourcesProtocol } from './protocols'
 import { registerWindowHandlers } from '@/electron/conveyor/handlers/window-handler'
 import { registerAppHandlers } from '@/electron/conveyor/handlers/app-handler'
 import { registerprojectHandlers } from '@/electron/conveyor/handlers/project_handler'
+import { registerEditorHandlers } from '../conveyor/handlers/editor_handler'
+import { AgentService } from '../biz/base/agent_service'
 
 export function createAppWindow(): void {
   // Register custom protocol for resources
@@ -35,6 +37,8 @@ export function createAppWindow(): void {
   registerWindowHandlers(mainWindow)
   registerAppHandlers(app)
   registerprojectHandlers()
+  registerEditorHandlers()
+  AgentService.getInstance().init();
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()

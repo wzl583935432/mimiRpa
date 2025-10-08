@@ -2,12 +2,14 @@ import { z } from 'zod'
 import { windowIpcSchema } from './window-schema'
 import { appIpcSchema } from './app-schema'
 import { projectIpcSchema } from './project-schema'
+import { editorIpcSchema } from './editor-schema'
 
 // Define all IPC channel schemas in one place
 export const ipcSchemas = {
   ...windowIpcSchema,
   ...appIpcSchema,
-  ...projectIpcSchema
+  ...projectIpcSchema,
+  ...editorIpcSchema
 } as const
 
 // Extract types from Zod schemas
