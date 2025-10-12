@@ -1,0 +1,3 @@
+class SYSException(Exception):
+    pass
+    

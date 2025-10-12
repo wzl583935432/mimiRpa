@@ -4,6 +4,16 @@ import {IPCService} from './ipc_service'
 import { spawn } from "child_process";
 import { app } from 'electron';
 import path from 'path';
+import { WebSocket } from "ws";
+import { BaseMessage } from "@/lib/Model/IPC/baseMessage";
+import { v4 as uuidv4 } from 'uuid';
+
+interface AgentCallBack{
+    messageID:string,
+    timeout:number,
+    resolve:(value:any)=>void;
+    reject:(reason:any) =>void;
+}
 
 export class AgentService{
     private static instance: AgentService;
@@ -23,6 +33,8 @@ export class AgentService{
     private isinit:boolean = false
 
     private ws: WebSocket|null = null ;
+    
+    private callbackCache:Record<string,AgentCallBack> = {};
 
     public async init(): Promise<void>
     {
@@ -30,6 +42,7 @@ export class AgentService{
             {
                 return;
             }
+
         await IPCService.getInstance().init();
         const port = IPCService.getInstance().GetPort();
     
@@ -58,10 +71,63 @@ export class AgentService{
         pyProcess.on("close", (code) => {
             console.log(`✅ Python 进程退出，代码: ${code}`);
             this.isinit = false;
+            this.callbackCache ={}
         });
+        
         this.ws = await pm;
+        if(!this.ws){
+           throw new Error("创建的连接异常"); 
+        }
+        this.ws.on("message", (msg) => {
+            const messageObj = JSON.parse(msg.toString());
+            const  mobj =  messageObj as BaseMessage<any> 
+            if(!mobj){
+                throw new  Error("消息对象不正确")
+            }
+            if(mobj.messageType === "response"){
+                const callbackInfo = this.callbackCache[mobj.messageId];
+                if(callbackInfo){
+                    callbackInfo.resolve(mobj.body);
+                }
+                delete  this.callbackCache[mobj.messageId];
+            }
+
+        });
 
     }
+
+    public async SelectElement(timeout:number):Promise<any>{
+        
+        return new Promise((resolve, rejects) =>{
+            const messageId = uuidv4();
+            const callback:AgentCallBack = {
+                messageID:messageId,
+                timeout:timeout,
+                resolve:resolve,
+                reject:rejects
+            }
+            this.callbackCache[messageId] = callback;
+            const msg:BaseMessage<string> ={
+                bizCode:"select",
+                requestCode:"select_element",
+                messageId: uuidv4(),
+                messageType:"request",
+            }
+            const str = JSON.stringify(msg);
+            this.ws.send(str);
+            if(timeout >0){
+                setTimeout(() => {
+                delete this.callbackCache[messageId];
+                rejects("超时了")
+            }, timeout);
+            }
+
+        })
+
+
+    }
+
+
     
 
 }

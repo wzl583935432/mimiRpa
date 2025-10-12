@@ -1,0 +1,2 @@
+class BIZException(Exception):
+    pass

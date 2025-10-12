@@ -1,15 +1,15 @@
 
 import threading
-import websocket
 import sys
-import json
-import uuid
-import time
+from web_socket_context import WebSocketContext
 from loguru import logger
-
+from .controller.selector_controller import SelectController
+from ..common.exception.sys_exception import SYSException
 class Application:
     _instance = None
     _lock = threading.Lock()  
+    route = {}
+    ws_context = None
 
     def __new__(cls):
         if not cls._instance:
@@ -18,9 +18,10 @@ class Application:
                     cls._instance = super().__new__(cls)
         return cls._instance
     
-    _appname=""
-    
+
     def start(self):
+        if self.ws_context != None:
+            return
         import argparse
         parser = argparse.ArgumentParser()
         parser.add_argument("--name", default="localhost")
@@ -29,41 +30,27 @@ class Application:
         logger.info(args.port)
         logger.info(args.name)
         self._appname= args.name
+        self.route = {
+            'select':SelectController()
+        }
+        self.ws_context = WebSocketContext(f"ws://localhost:{args.port}", args.name, )
         # 创建 WebSocket 对象
-        ws = websocket.WebSocketApp(
-            f"ws://localhost:{args.port}",  # 替换成你的服务器地址
-            on_open=self.on_open,
-            on_message=self.on_message,
-            on_error=self.on_error,
-            on_close=self.on_close
-        )
-        ws.run_forever()
+
         pass
 
-    def on_message(self, ws, message):
-        print("收到消息:", message)
+    async def on_request(self, msgObj):
+        bizCode = msgObj.get('bizCode')
+        handler = self.route.get(bizCode)
 
-    def on_error(self, ws, error):
-        print("错误:", error)
+        if handler:
+            # 调用业务代码处理消息
+            return await handler(self, self.ws_context, msgObj)
+        else:
+            raise SYSException(f"没有该处理类型{bizCode}")
+        pass
+
 
     def on_close(self, ws, close_status_code, close_msg):
-        print("连接关闭")
-        sys.exit()
-
-    def on_open(self, ws):
-        print("连接成功")
-        id_obj = uuid.uuid4()
-
-        # 转换为字符串
-        id_str = str(id_obj)
-        registerData ={
-            "messageCode":"register",
-            "messageType":"request",
-            "messageId":id_str,
-            "subProcessName":self._appname
-        }
-        message_str = json.dumps(registerData)
-        print(f"注册消息:{message_str}")
-        ws.send(message_str)
+        sys.exit(1)
 
 

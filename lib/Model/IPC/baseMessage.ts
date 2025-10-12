@@ -3,7 +3,7 @@ export interface BaseMessage<T>{
     requestCode:string,
     messageId:string,
     messageType:string, //request/ response
-    returnCode:string|undefined,
+    returnCode?:string|undefined,
     errorMessage?:string|undefined,
-    body:T
+    body?:T
 }
