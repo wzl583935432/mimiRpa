@@ -1,3 +1,0 @@
-class SYSException(Exception):
-    pass
-    

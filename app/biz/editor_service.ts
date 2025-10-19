@@ -6,7 +6,7 @@ import { ElementTarget } from "@/lib/Model/Editor/ElementTarget";
 import NodeDO from "@/lib/Model/Editor/NodeDO";
 
 export class EditorService {
-     private static instance: EditorService;
+    private static instance: EditorService;
     private constructor() {
 
     }
@@ -27,17 +27,12 @@ export class EditorService {
     }
 
     public async queryComponentTypes() :Promise<Record<string, ComponentTypeDO>>{
-                const conveyor = window.conveyor;
+        const conveyor = window.conveyor;
         const editor_api = conveyor.editor
         
         const componentTypes = await editor_api.queryComponentTypes();
         console.warn('nodeTree', componentTypes);
         return componentTypes;
     }
-
-    public async startSelectElement():Promise<ElementTarget>{
-        throw new Error("not implement")
-    }
-
 
 }

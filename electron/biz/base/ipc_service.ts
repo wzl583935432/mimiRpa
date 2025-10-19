@@ -1,5 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { BaseMessage } from "@/lib/Model/IPC/baseMessage";
+import log from 'electron-log'
+
 
 interface PromiseResult{
     timeout:number;
@@ -61,7 +63,9 @@ export class  IPCService{
             ws.once("message", (msg) => {
                 try{
                     const messageObj = JSON.parse(msg.toString());
-                   const  mobj =  messageObj as BaseMessage<string> 
+                    log.info('收到消息'+ msg.toString());
+                    
+                    const  mobj =  messageObj as BaseMessage<string> 
                     if(!mobj){
                         throw new  Error("消息对象不正确")
                     }

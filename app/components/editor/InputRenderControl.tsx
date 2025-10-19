@@ -1,6 +1,8 @@
-import React, { useCallback } from 'react';
-import { Input, Select } from 'antd';
+import React, { useCallback, useState } from 'react';
+import { Input, Select, Button } from 'antd';
 
+import { AimOutlined } from '@ant-design/icons';
+import SelectElement from './selectElement';
 /**
  * 核心渲染函数：根据配置对象的 type 字段渲染 antd 输入组件，并处理事件
  * * @param {string} fieldName - 字段名称（key）
@@ -11,7 +13,9 @@ import { Input, Select } from 'antd';
  */
 export const InputRenderControl = ({ fieldName, config, value, onValueChange, onUpdate }) => {
   const { inputType, options, placeholder, rows } = config;
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const [itemValue, setItemValue] = useState(value);
   // 所有文本输入的 onChange，用于更新本地 state
   const handleTextChange = useCallback((e) => {
       onValueChange(e.target.value);
@@ -32,12 +36,28 @@ export const InputRenderControl = ({ fieldName, config, value, onValueChange, on
     onUpdate(fieldName, newValue); // 立即触发提交/更新
   }, [fieldName, onUpdate, onValueChange]);
 
+const handleOpenDialog = () => {
+    setIsDialogOpen(true);
+  };
+
+  // 处理对话框关闭和结果返回的回调函数
+  const handleCloseDialog = (result) => {
+    setIsDialogOpen(false);
+    if (result) {
+
+      if (result !== value) {
+        onUpdate(fieldName, result);
+      }
+      // 接收到结果，更新当前界面的状态
+      setItemValue(result);
+    }
+  };
 
   switch (inputType) {
     case 'text':
       return (
         <Input 
-          value={value} 
+          value={itemValue} 
           onChange={handleTextChange}
           onBlur={handleBlur} // 失去焦点时触发提交
           placeholder={placeholder || `请输入${config.name}`}
@@ -47,7 +67,7 @@ export const InputRenderControl = ({ fieldName, config, value, onValueChange, on
     case 'textarea':
       return (
         <Input.TextArea 
-          value={value} 
+          value={itemValue} 
           onChange={handleTextChange}
           onBlur={handleBlur} // 失去焦点时触发提交
           rows={rows || 2}
@@ -58,11 +78,35 @@ export const InputRenderControl = ({ fieldName, config, value, onValueChange, on
     case 'select':
       return (
         <Select 
-          value={value}
+          value={itemValue}
           onChange={handleSelectChange} // 值改变时触发提交
           placeholder={placeholder || `请选择${config.name}`}
           options={options} 
         />
+      );
+
+    case 'targetElement':
+      return (
+        <div style={{ padding: '20px' }}>
+           <Button 
+            type="primary" 
+            // ✅ 正确的使用：AimOutlined
+            icon={<AimOutlined />} 
+            size="large" 
+            onClick={handleOpenDialog}
+          >
+            编辑目标
+          </Button>
+
+          {isDialogOpen && (
+            <SelectElement
+              initialText={itemValue}
+              onClose={handleCloseDialog}
+            />
+          )}
+
+        </div>
+       
       );
 
     default:

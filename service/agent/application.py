@@ -3,8 +3,8 @@ import threading
 import sys
 from web_socket_context import WebSocketContext
 from loguru import logger
-from .controller.selector_controller import SelectController
-from ..common.exception.sys_exception import SYSException
+from controller.selector_controller import SelectController
+from common.exception.sys_exception import SYSException
 class Application:
     _instance = None
     _lock = threading.Lock()  
@@ -34,6 +34,7 @@ class Application:
             'select':SelectController()
         }
         self.ws_context = WebSocketContext(f"ws://localhost:{args.port}", args.name, )
+        self.ws_context.start()
         # 创建 WebSocket 对象
 
         pass

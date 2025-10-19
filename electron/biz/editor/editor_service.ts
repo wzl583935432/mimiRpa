@@ -123,7 +123,7 @@ export class EditorService {
                     propertes: [
                     { id: 'elementSelector', name: '元素选择器', visiable:true, readonly:false, defaultValue: '', description: '用于定位目标元素的CSS选择器', inputType: 'text', type: 'string' },
                     { id: 'timeout', name: '超时时间', visiable:true, readonly:false, defaultValue: 5000, description: '等待元素出现的最大时间（毫秒）', inputType: 'text', type: 'number' },
-                    { id: 'resultVariable', name: '结果变量名', visiable:true, readonly:false, defaultValue: 'elementText', description: '存储获取到的文本内容的变量名', inputType: 'text', type: 'string' },
+                    { id: 'resultVariable', name: '结果变量名', visiable:true, readonly:false, defaultValue: 'elementText', description: '存储获取到的文本内容的变量名', inputType: 'targetElement', type: 'string' },
                 ]   // replace {} with the actual properties if needed
             },
         };

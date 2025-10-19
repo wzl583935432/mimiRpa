@@ -6,6 +6,7 @@ import { registerWindowHandlers } from '@/electron/conveyor/handlers/window-hand
 import { registerAppHandlers } from '@/electron/conveyor/handlers/app-handler'
 import { registerprojectHandlers } from '@/electron/conveyor/handlers/project_handler'
 import { registerEditorHandlers } from '../conveyor/handlers/editor_handler'
+import {registerUIHandlers } from '../conveyor/handlers/ui-handler'
 import { AgentService } from '../biz/base/agent_service'
 
 export function createAppWindow(): void {
@@ -38,6 +39,7 @@ export function createAppWindow(): void {
   registerAppHandlers(app)
   registerprojectHandlers()
   registerEditorHandlers()
+  registerUIHandlers()
   AgentService.getInstance().init();
 
   mainWindow.on('ready-to-show', () => {
