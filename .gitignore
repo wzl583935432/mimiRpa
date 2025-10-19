@@ -3,5 +3,6 @@ dist
 out
 .DS_Store
 *.log*
+.venv
 temp
 /service/agent/__pycache__/application.cpython-312.pyc
