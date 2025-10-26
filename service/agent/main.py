@@ -3,6 +3,7 @@
 import os
 import sys
 from application import Application
+import threading
 
 def change_to_app_dir():
     """
@@ -33,7 +34,9 @@ def set_log():
 def main():
     change_to_app_dir()
     set_log()
-    Application().start()
+
+    t = threading.Thread(target=Application().start, daemon=True)
+    t.start()
 
 
 
