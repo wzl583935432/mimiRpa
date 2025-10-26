@@ -3,6 +3,7 @@ import tkinter as tk
 import json
 import uiautomation as uia
 from tk_window_manager  import TkWindowManager
+from web_ui_automation_select import WebUIAutomationSelect
 import threading
 import time
 
@@ -80,7 +81,7 @@ def doIndthro():
     pass
 
 def main():
-
+    WebUIAutomationSelect().init_config()
     t = threading.Thread(target=doIndthro, daemon=True)
     t.start()
     TkWindowManager().start()

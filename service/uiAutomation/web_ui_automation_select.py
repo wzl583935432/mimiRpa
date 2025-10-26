@@ -1,13 +1,14 @@
 import psutil
 import os
 import json
+from chrome_playwright import ChromePlaywright
 
 class WebUIAutomationSelect:
     _instance = None
 
-    web_config = {}
+    _web_config = {}
 
-    web_content = {}
+    _web_contents = {}
 
     def __new__(cls):
         if not cls._instance:
@@ -16,12 +17,11 @@ class WebUIAutomationSelect:
                     cls._instance = super().__new__(cls)
         return cls._instance
     
-    def init_config():
+    def init_config(self):
         web_config ="web_config.json"
         config_content = '[{"name":"chrome", "port":10245}, {"name":"mimibrowser","port":10242}]'
 
         if os.path.exists(web_config):
-
             try:
                 with open(web_config, 'r', encoding='utf-8') as f:
                     config_content = f.read()
@@ -31,20 +31,37 @@ class WebUIAutomationSelect:
             except Exception as e:
                 print(f"发生其他错误: {e}")
         data_list = json.load(config_content)
-        web_config ={}
+        self._web_config ={}
         for item in data_list:
-            web_config[item['name']] = item
+           self._web_config[item['name']] = item
         pass
 
 
-    def is_web_control(self, control):
+    def is_web_control(self, control, x, y):
         process_name = self._get_process_name(control)
-        config = self.web_config[process_name]
+        config = self._web_config[process_name]
         if not config:
             return False
-         
-        pass
+        web_content = self._web_contents[process_name] 
+        if not web_content:
+            web_content = self._create_web_playwright(process_name)
+            self._web_contents[process_name] = web_content
+        view_port = web_content.get_viewport()
+        if not view_port:
+            return False
+        if (view_port['x'] < x and 
+            view_port['y'] < y and 
+            x < view_port['x'] + view_port['width'] and 
+            y < view_port['y'] + view_port['height']):
+            return True
+        return False
+        
 
+
+    def _create_web_playwright(self, name):
+        if name == 'chrome' or name == 'mimibrowser' :
+            return ChromePlaywright()
+        return None
     
 
 

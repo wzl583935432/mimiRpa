@@ -5,6 +5,8 @@ import time
 from loguru import logger
 import comtypes.client
 
+from web_ui_automation_select import WebUIAutomationSelect
+
 class UIAutomationSelect:
     _instance = None
     #是否在选择中
@@ -86,13 +88,16 @@ class UIAutomationSelect:
         if (time.time() - self._last_update_timestamp < 0.2 ):
             return
         self._last_update_timestamp = time.time()
+
         if self._current_draw_window:
             self._current_draw_window.withdraw()
             #self._current_draw_window = None
 
         contr = self.getUIElementTargetByPoint(x, y)
         rect = contr.BoundingRectangle  # 返回 (left, top, right, bottom)
-
+        if WebUIAutomationSelect().is_web_control(contr, x, y):
+            #todo web 选择
+            pass
         left = rect.left
         top = rect.top
         right = rect.right
@@ -109,6 +114,7 @@ class UIAutomationSelect:
                 return
             
         self._current_rect = (left, top, width, height)
+
         self._draw_rect((left, top, width, height), duration = -1)
         pass
 
