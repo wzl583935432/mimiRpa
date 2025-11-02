@@ -1,4 +1,4 @@
-from service.uiAutomation.ui_automation_select import UIAutomationSelect
+from ui_automation_select import UIAutomationSelect
 import tkinter as tk
 import json
 import uiautomation as uia
@@ -69,19 +69,19 @@ def dotest(name):
     height = bottom - top
 
     draw_rect((left, top, width, height), duration=3)
-    au.startSelectElementTarget()
+    au.start_select_element_target()
     TkWindowManager().pushTaskToMain(14, dotest, '')
     pass
 
 def doIndthro():
     time.sleep(5)
     au = UIAutomationSelect()
-    au.startSelectElementTarget(None)
+    au.start_select_element_target(None)
     #TkWindowManager().pushTaskToMain(0, dotest, '')
     pass
 
 def main():
-    WebUIAutomationSelect().init_config()
+    WebUIAutomationSelect().init_run()
     t = threading.Thread(target=doIndthro, daemon=True)
     t.start()
     TkWindowManager().start()

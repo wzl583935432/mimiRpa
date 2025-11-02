@@ -4,11 +4,14 @@ import tkinter as tk
 import time
 from loguru import logger
 import comtypes.client
+import traceback
+import threading
 
 from web_ui_automation_select import WebUIAutomationSelect
 
 class UIAutomationSelect:
     _instance = None
+    _lock = threading.Lock()
     #是否在选择中
     _is_run_select = False
 
@@ -35,7 +38,7 @@ class UIAutomationSelect:
         self._is_run_select = False
         pass
     
-    def startSelectElementTarget(self, callback_func):
+    def start_select_element_target(self, callback_func):
         self._is_run_select = True
         self._callback_func = callback_func
         self._mouse_listener = mouse.Listener(
@@ -88,16 +91,17 @@ class UIAutomationSelect:
         if (time.time() - self._last_update_timestamp < 0.2 ):
             return
         self._last_update_timestamp = time.time()
-
         if self._current_draw_window:
             self._current_draw_window.withdraw()
             #self._current_draw_window = None
-
         contr = self.getUIElementTargetByPoint(x, y)
         rect = contr.BoundingRectangle  # 返回 (left, top, right, bottom)
         if WebUIAutomationSelect().is_web_control(contr, x, y):
+            WebUIAutomationSelect().start_select_element_target()
+            print('--------------------------------------')
             #todo web 选择
             pass
+            return
         left = rect.left
         top = rect.top
         right = rect.right
@@ -110,6 +114,7 @@ class UIAutomationSelect:
                 self._current_rect[1] == top and
                   self._current_rect[2] == width and
                     self._current_rect[3] == height):
+                print(f"_draw_rect x {left}  y {top} w {width}, h {height}")
                 self._current_draw_window.deiconify()
                 return
             
@@ -125,7 +130,9 @@ class UIAutomationSelect:
             comtypes.CoInitialize()
             self._redraw_control_by_point(x, y)
             comtypes.CoUninitialize()
-        except Exception:
+        except Exception as e:
+            traceback.print_exc()
+            print("select error ", e)
             pass
         pass
     
@@ -136,7 +143,12 @@ class UIAutomationSelect:
             if button == mouse.Button.left:
                 self.stopSelectElementTarget()
                 contr = self.getUIElementTargetByPoint(x, y)
-                self._redraw_control(contr)
+                if WebUIAutomationSelect().is_web_control(contr, x, y):
+                    print('--------------------------------------')
+                    #todo web 选择
+                    pass
+                else:
+                    self._redraw_control(contr)
                 self._finish_select_element_target(True, contr)
                 #self._redraw_control_by_point(x, y)
                 
@@ -150,7 +162,7 @@ class UIAutomationSelect:
 
     def _draw_rect(self, rect, duration= 0):
         x, y, w, h = rect
-        print(f"x {x}  y {y} w {w}, h {h}")
+        print(f"_draw_rect x {x}  y {y} w {w}, h {h}")
         if not self._current_draw_window:
             self._current_draw_window = tk.Toplevel()           
         else:

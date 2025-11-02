@@ -1,7 +1,7 @@
 import threading
 import tkinter as tk
 
-
+#tk ui 是主要的tk
 class TkWindowManager:
     _instance = None
     _lock = threading.Lock()  
