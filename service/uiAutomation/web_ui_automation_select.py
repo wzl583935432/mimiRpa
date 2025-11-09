@@ -7,6 +7,10 @@ import asyncio
 import uuid
 import queue
 from queue import Empty
+from .model.web_control import WebControl
+from .model.request_element_data import RequestElementData
+from .model.point import Point
+from .model.viewport_rect import ViewportRect
 from web_operation import ChromeOperation
 from dataclasses import dataclass
 from typing import Optional
@@ -90,6 +94,12 @@ class WebUIAutomationSelect:
                             result = await self._get_view_port(request_object.config)
                             request_object.responseData = result
                             request_object.response_event.set()
+                        if request_object.messageCode == 'get_element_on_point':
+                            print('playwright 处理view port')
+                            result = await self._get_element_on_point(request_object.config, request_object.requestData)
+                            request_object.responseData = result
+                            request_object.response_event.set()
+                            
                         elif request_object.messageCode == 'start_select_element_target':
                             print('pstart_select_element_target')
                             await self._start_select_element_target(request_object.config)
@@ -131,6 +141,23 @@ class WebUIAutomationSelect:
         for item in data_list:
            self._web_config[item['name']] = item
         pass
+
+    async def _get_element_on_point(self, config, request_data):
+        if not config:
+            return None
+        name = config['name']
+        if ((not name in self._web_contents)  or (not self._web_contents[name])):
+            web_content = self._create_web_operation(config)
+            self._web_contents[name] = web_content
+            print('creat ui playwright is ok')
+        else:
+            web_content = self._web_contents[name] 
+        if not web_content:
+            print('get web content error!')
+            return None
+
+        element_info = await web_content.get_element_on_point(request_data)
+        return element_info
 
     async def _get_view_port(self, config):
         if not config:
@@ -182,6 +209,27 @@ class WebUIAutomationSelect:
         self._request_event.set()
         pass
 
+    def get_element_on_point(self, web_control:WebControl, x , y):
+        if None == web_control:
+            return None
+        if None == web_control.config:
+            return None
+        requestData = RequestElementData(web_control.view_port, Point(x, y))
+        call_info =  CallInfo('get_element_on_point', web_control.config, requestData) 
+        self._playwright_request(call_info=call_info)
+        event_set = call_info.response_event.wait(timeout=15)
+        
+        if not event_set:
+            logger.warning(f'get_element_on_point 请求超时')
+            return None
+        
+        element_info = call_info.responseData
+        if not element_info:
+            print('not get element')
+            return None
+        return element_info
+        pass
+
     def start_select_element_target(self):
         print('web----')
         for config in self._web_config.values():
@@ -199,14 +247,14 @@ class WebUIAutomationSelect:
         pass
 
 
-    def is_web_control(self, control, x, y):
+    def in_which_web_control(self, control, x, y)-> WebControl| None:
         process_name = self._get_process_name(control)
         print(f'process_name {process_name}')
         if (not process_name in self._web_config):
-            return False
+            return None
         config = self._web_config[process_name]
         if not config:
-            return False
+            return None
         print('web----')
 
         call_info =  CallInfo('viewport', config) 
@@ -215,21 +263,21 @@ class WebUIAutomationSelect:
         
         if not event_set:
             logger.warning(f'viewport 请求超时')
-            return False
+            return None
         
-        view_port = call_info.responseData
+        view_port:ViewportRect = call_info.responseData
         if not view_port:
             print('get view port error')
-            return False
+            return None
 
         print(f'viewport  x {view_port['x']} y {view_port['y']} width {view_port['width']} height {view_port['height']}')
-        if (view_port['x'] < x and 
-            view_port['y'] < y and 
-            x < view_port['x'] + view_port['width'] and 
-            y < view_port['y'] + view_port['height']):
-            print("鼠标在web中")
-            return True
-        return False
+        if (view_port.x < x and 
+            view_port.y < y and 
+            x < view_port.x + view_port.width and 
+            y < view_port.y + view_port.height):
+            print("鼠标在web中")          
+            return WebControl(cfg=config, vp= view_port)
+        return None
         
 
     def _create_web_operation(self, config):

@@ -8,6 +8,7 @@ import traceback
 import threading
 
 from web_ui_automation_select import WebUIAutomationSelect
+from .model.web_control import WebControl
 
 class UIAutomationSelect:
     _instance = None
@@ -96,9 +97,10 @@ class UIAutomationSelect:
             #self._current_draw_window = None
         contr = self.getUIElementTargetByPoint(x, y)
         rect = contr.BoundingRectangle  # 返回 (left, top, right, bottom)
-        if WebUIAutomationSelect().is_web_control(contr, x, y):
-            WebUIAutomationSelect().start_select_element_target()
+        web_control:WebControl|None  = WebUIAutomationSelect().in_which_web_control(contr, x, y)
+        if None != web_control:
             print('--------------------------------------')
+            self._draw_rect((round(web_control.view_port.x), round(web_control.view_port.y),round(web_control.view_port.width), round(web_control.view_port.height)), duration = -1)
             #todo web 选择
             pass
             return
@@ -143,7 +145,7 @@ class UIAutomationSelect:
             if button == mouse.Button.left:
                 self.stopSelectElementTarget()
                 contr = self.getUIElementTargetByPoint(x, y)
-                if WebUIAutomationSelect().is_web_control(contr, x, y):
+                if WebUIAutomationSelect().in_which_web_control(contr, x, y):
                     print('--------------------------------------')
                     #todo web 选择
                     pass
