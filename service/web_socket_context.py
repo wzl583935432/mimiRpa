@@ -18,8 +18,10 @@ class WebSocketContext:
     _appname=""
     _callbackCache ={}
 
-    def __init__(self, url: str, appName:str, on_message: Optional[Callable[[Any], None]] = None,
-                on_close: Optional[Callable[[ Any, Any], None]] = None ):
+    def __init__(self, url: str, 
+                 appName:str,
+                 on_message: Optional[Callable[[Any], None]] = None,
+                 on_close: Optional[Callable[[ Any, Any], None]] = None ):
         self._url = url
         self._appname = appName
         self._on_message = on_message
@@ -29,6 +31,11 @@ class WebSocketContext:
         pass
 
     def start(self):
+        self._connect()
+        logger.error(f'程序退出')
+
+    def _connect(self):
+        logger.info(f'开始启动连接服务{self._url}')
                 # 创建 WebSocket 对象
         self. ws = websocket.WebSocketApp(
             self._url,  # 替换成你的服务器地址
@@ -37,7 +44,9 @@ class WebSocketContext:
             on_error=self.on_error,
             on_close=self.on_close
         )
+        logger.info(f'创建连接成功')
         self.ws.run_forever()
+        logger.error(f'连接退出')
 
     def safe_send(self, message_str):
         # Acquire the lock before sending
@@ -49,9 +58,9 @@ class WebSocketContext:
             else:
                 print("Warning: WebSocket not connected. Cannot send message.")
 
-    async def _handle_request_in_thread(self, msgObj):
+    def _handle_request_in_thread(self, msgObj):
         logger.info(msgObj)
-        message_id = msgObj.get('messageId', '') if msgObj else ''
+        message_id = msgObj.get('messageId', '')
         message_str = ""
 
         try:
@@ -61,7 +70,7 @@ class WebSocketContext:
             
             # Construct success response
             responseData ={
-                'bizCode':msgObj.get('bizCod'),
+                'bizCode':msgObj.get('bizCode'),
                 "requestCode":msgObj.get('requestCode'),
                 "messageType":"response",
                 "messageId":message_id,
@@ -82,7 +91,7 @@ class WebSocketContext:
             }
             
         message_str = json.dumps(responseData)
-        
+        logger.info(f"返回 {message_str}")
         # Send the response back using the thread-safe method
         self.safe_send(message_str)
 
@@ -102,6 +111,8 @@ class WebSocketContext:
 
     def on_close(self, ws, close_status_code, close_msg):
         print("连接关闭")
+        logger.info('重连')
+        self._connect()
         self._on_close(close_status_code, close_msg)
 
     def _request_timeout_action(self, messageId):

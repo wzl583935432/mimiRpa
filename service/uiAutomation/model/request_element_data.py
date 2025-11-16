@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from viewport_rect import ViewportRect
-from point import Point
+from .viewport_rect import ViewportRect
+from .point import Point
 
 @dataclass
 class RequestElementData:

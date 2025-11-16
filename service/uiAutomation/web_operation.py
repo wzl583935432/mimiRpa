@@ -6,6 +6,7 @@ from .model.request_element_data import RequestElementData
 from .model.point import Point
 from .model.web_target_element import WebTargetElement,WebTargetFrame,WebTargetElementInFrame
 from typing import List
+from decimal import Decimal
 from .model.viewport_rect import ViewportRect
 class ChromeOperation:
     _port = -1
@@ -80,30 +81,35 @@ class ChromeOperation:
             self._current_page.on("close", self._onepage_close)
         return active_page
 
-    async def _query_element_on_point(self, current_frame, parent_frames:List[WebTargetFrame] , web_point:Point):
+    async def _query_element_on_point(self, current_frame, 
+                                      parent_frames:List[WebTargetFrame], 
+                                      web_point:Point, leftTopPoint:Point,  devicePixelRatio:Decimal):
         if None == parent_frames:
             parent_frames = []
-        script_get_element =""" (x, y) => {
-
+        script_get_element =""" ([x, y]) => {
+            console.log(x, y)
             isIframe = (element)=> {
-                if (!element || typeof element !== 'object' || element.nodeType !== 1) {
-                    // 确保传入的是一个元素节点
-                    return false;
-                }
+                if (!element || !element.tagName) {
+                        return false; // 不是有效的 DOM 元素
+                    }
                 
                 // tagName 属性返回大写的标签名称
-                const tagName = element.tagName;
+                const tagName = element.tagName.toUpperCase();
                 
                 // 检查是否是 IFRAME 或 FRAME 标签
                 return tagName === 'IFRAME' || tagName === 'FRAME'; 
             }
-            element = document.elementFromPoint(x,y)
-            is_iframe = isIframe(element) 
-            rect = document.elementFromPoint(20,20).getBoundingClientRect()
-
+            element = document.elementFromPoint(x, y)
+            if(!element){
+                return null
+            }
+            console.log(element)
+            const is_iframe = isIframe(element) 
+            rect = element.getBoundingClientRect()
+            console.log(rect)
             let frameIndex = -1
 
-            if (is_frame){
+            if (is_iframe){
                 const allIframes = document.getElementsByTagName('iframe');
         
                 // 3. 遍历集合，找到目标元素的位置
@@ -164,10 +170,10 @@ class ChromeOperation:
                     const info = {};
                     
                     // 1. 收集元素类型 (标签名)
-                    info.tagName = currentElement.tagName.toLowerCase(); 
+                    info.tag_name = currentElement.tagName.toLowerCase(); 
                     
                     // 2. 收集兄弟元素索引 (核心新增功能)
-                    info.siblingIndex = getElementSiblingIndex(currentElement);
+                    info.sibling_index = getElementSiblingIndex(currentElement);
 
                     // 3. 收集可见文本 (取前100个字符)
                     const textContent = currentElement.textContent || '';
@@ -193,48 +199,59 @@ class ChromeOperation:
                 return chain;
             }
 
-            paths = getElementChainInfo(element)
-
-
+            paths = getElementChainInfoWithIndex(element)
+            element.style.backgroundColor = '#f0f0f0'
+            element.style.color = '#ff0000';
+            console.log('frameIndex', frameIndex)
             return {
                 is_iframe: is_iframe,
                 frameIndex: frameIndex,
                 rect:rect,
-                paths: paths
+                paths: paths,
+                elem: element.tagName
                 
             }
         }
         """
-
-        element_info = await current_frame.evaluate(script_get_element, [web_point.x, web_point.y])
-        if None == element_info:
+        element_info_handler = await current_frame.evaluate_handle(script_get_element, [round(web_point.x), round(web_point.y)])
+        if None == element_info_handler:
+            return None
+        element_info = await element_info_handler.json_value()
+        if(None == element_info):
             return None
         if element_info['is_iframe']:
-
+            print(f'在 frame 中')
             child_frames =  current_frame.child_frames
             index = 0
             for item in child_frames:
-                if(index < element_info.frameIndex):
+                if(index < element_info['frameIndex']):
                     index = index + 1
                     continue
                 itemTargetFrame = WebTargetFrame(index=index, name= item.name, url=item.url)
                 return await self._query_element_on_point(item, 
                                                            parent_frames+[itemTargetFrame],
-                                                           web_point.x - element_info['rect']['x'],
-                                                           web_point.y - element_info['rect']['y'])
-                pass
+                                                           Point( web_point.x - element_info['rect']['x'],
+                                                           web_point.y - element_info['rect']['y']),
+                                                           Point(leftTopPoint.x +element_info['rect']['x'], leftTopPoint.y +element_info['rect']['y']),
+                                                           devicePixelRatio
+                                                           )
+                
             pass
         
         chains:List[WebTargetElementInFrame] = []
         for path_item in element_info['paths']:
-            element_in_frame = WebTargetElementInFrame(path_item['tag_name'], 
-                                                       path_item['sibling_index'],
-                                                       path_item['text'],
-                                                       path_item['attr'])
+            element_in_frame = WebTargetElementInFrame(path_item.get('tag_name', None), 
+                                                       path_item.get('sibling_index', 0),
+                                                       path_item.get('text',''),
+                                                       path_item.get('attr', None))
             chains.append(element_in_frame)
             pass
-
-        return WebTargetElement( parent_frames= parent_frames, chains = chains)
+        print(f"--------------{json.dumps(element_info)}------")
+        rect = ViewportRect(leftTopPoint.x + element_info['rect']['x'],
+                     leftTopPoint.y + element_info['rect']['y'], 
+                     element_info['rect']['width'] , 
+                     element_info['rect']['height'], devicePixelRatio)
+        return WebTargetElement( parent_frames= parent_frames, chains = chains, rect = rect)
 
 
 
@@ -243,11 +260,25 @@ class ChromeOperation:
         #request_element_data.view_port[]
         main_frame = active_page.main_frame
 
-        web_point = Point(request_element_data.target_point.x - request_element_data.view_port.x, 
-              request_element_data.target_point.y - request_element_data.view_port.y
-              )
-        
-        return await self._query_element_on_point(main_frame, None, web_point=web_point)
+        web_target_x =  (request_element_data.target_point.x - request_element_data.view_port.x)/request_element_data.view_port.devicePixelRatio
+        web_target_y = (request_element_data.target_point.y - request_element_data.view_port.y)/request_element_data.view_port.devicePixelRatio
+        web_point = Point(web_target_x, web_target_y)
+        print(f"--web-----{web_target_x}----- {web_target_y}-------------")
+
+        webTargetElement:WebTargetElement = await self._query_element_on_point(main_frame, 
+                                                  None,
+                                                  web_point=web_point, 
+                                                  leftTopPoint = Point(0, 0),
+                                                  devicePixelRatio = request_element_data.view_port.devicePixelRatio
+                                                  )
+        if(None == webTargetElement):
+            return None
+        webTargetElement.rect.x = webTargetElement.rect.x * request_element_data.view_port.devicePixelRatio + request_element_data.view_port.x
+        webTargetElement.rect.y = webTargetElement.rect.y * request_element_data.view_port.devicePixelRatio + request_element_data.view_port.y
+        webTargetElement.rect.height = webTargetElement.rect.height * request_element_data.view_port.devicePixelRatio
+        webTargetElement.rect.width = webTargetElement.rect.width * request_element_data.view_port.devicePixelRatio
+        print(f"webTargetElement.rect.height {webTargetElement.rect.height}  webTargetElement.rect.width {webTargetElement.rect.width}")
+        return webTargetElement
 
 
 
@@ -277,8 +308,8 @@ class ChromeOperation:
         
         print(f"  { json.dumps(json_string)}")
         
-        toolbar_height_approx = window_info['outerHeight'] - window_info['innerHeight'] 
-        toolbar_width_approx = window_info['outerWidth']  - window_info['innerWidth']
+        toolbar_height_approx = (window_info['outerHeight'] - window_info['innerHeight']) - (window_info['outerWidth']  - window_info['innerWidth'])/2
+        toolbar_width_approx = (window_info['outerWidth']  - window_info['innerWidth'])/2
         
         # 视口左上角的 Y 坐标 = 窗口 Y 坐标 + 工具栏高度
         viewport_x = (window_info['screenX'] + toolbar_width_approx)* window_info['devicePixelRatio'] 

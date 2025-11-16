@@ -1,4 +1,4 @@
-from viewport_rect import ViewportRect
+from .viewport_rect import ViewportRect
 from dataclasses import dataclass
 
 @dataclass

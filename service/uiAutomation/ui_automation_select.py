@@ -6,9 +6,12 @@ from loguru import logger
 import comtypes.client
 import traceback
 import threading
-
-from web_ui_automation_select import WebUIAutomationSelect
+from typing import List, Dict, Any
+import json
+from .web_ui_automation_select import WebUIAutomationSelect
 from .model.web_control import WebControl
+from .model.web_target_element import WebTargetElement
+from .model.call_info import CallInfo
 
 class UIAutomationSelect:
     _instance = None
@@ -26,7 +29,7 @@ class UIAutomationSelect:
 
     _mouse_listener = None
 
-    _callback_func = None
+    _call_info = None
 
     def __new__(cls):
         if not cls._instance:
@@ -39,9 +42,10 @@ class UIAutomationSelect:
         self._is_run_select = False
         pass
     
-    def start_select_element_target(self, callback_func):
+    def start_select_element_target(self, call_info:CallInfo):
+        logger.info("start select element")
         self._is_run_select = True
-        self._callback_func = callback_func
+        self._call_info = call_info
         self._mouse_listener = mouse.Listener(
             on_click=self._on_click,
             on_move=self._on_move  # <--- 添加这一行
@@ -50,11 +54,73 @@ class UIAutomationSelect:
 
         pass
 
-    def _finish_select_element_target(self, is_sucess, contrl):
+    def _finish_select_web_target(self, is_sucess, web_target:WebTargetElement|None):
         data ={}
+        data['type'] = 'web'
+        if self._call_info:
+            self._call_info.responseData =  { 'is_success': is_sucess, 'data': data}
+            self._call_info.response_event.set()
+        pass
+    def _get_control_path(self, element:uia.Control) -> List[uia.Control]:
 
-        if self._callback_func:
-            self._callback_func(is_sucess, data)
+        if not element:
+            return []
+            
+        path_upwards: List[uia.Control] = []
+        current_element = element
+        
+        # 向上遍历，直到达到根元素 (桌面)
+        while current_element:
+            path_upwards.append(current_element)
+            print(f" ClassName {current_element.ClassName}")
+            # 达到根元素（桌面）则停止
+            if current_element == uia.GetRootControl():
+                break
+            
+            current_element = current_element.GetParentControl()
+            
+        # 将列表反转，得到从桌面到目标元素的向下路径
+        return path_upwards[::-1]
+    
+    def _turn_control_path_to_list(self, control_list:List[uia.Control])->List[Dict[str, Any]]:
+        details_path: List[Dict[str, Any]] = []
+        for control in control_list:
+        # 尝试获取 UID/RuntimeId。RuntimeId 是 UI 自动化中的唯一标识符。
+            runtime_id = control.GetRuntimeId()
+            try:
+                control_type_name = str(control.ControlTypeName) 
+                # 结果通常是 "ControlType.Button" 或 "ControlType.Window"
+                # 如果需要去掉前缀，可以 further process: control_type_name.split('.')[-1]
+                
+            except Exception as e:
+                print(f"提取 ControlType 失败: {e}")
+                control_type_name = "UNKNOWN_TYPE"
+            # 提取关键属性
+            element_details = {
+                # 将 RuntimeId 转换为字符串，用于唯一标识
+                "UID": str(runtime_id) if runtime_id else "N/A", 
+                "ControlType": control_type_name,         # 元素类型 (e.g., WindowControl)
+                "ClassName": control.ClassName,                  # 窗口类名 (e.g., Notepad)
+                "Name_Text": control.Name,                       # 窗口/控件名称 (文本)
+                "Handle": control.NativeWindowHandle,            # 窗口句柄 (HWND), 对窗口/Pane有用
+                'AutomationId':control.AutomationId
+            }
+            
+            details_path.append(element_details)
+
+        return details_path
+        
+
+    def _finish_select_ui_target(self, is_sucess, contrl):
+        data ={}
+        control_path:List[uia.Control] = self._get_control_path(contrl)
+        detail_path = self._turn_control_path_to_list(control_list=control_path)
+        print(f"---detail_path--------------{json.dumps(detail_path)}-")
+        data['type'] = 'DesktopUI'
+        data['path'] = json.dumps(detail_path)
+        if self._call_info:
+            self._call_info.responseData =  { 'is_success': is_sucess, 'data': data}
+            self._call_info.response_event.set()
         pass
 
     def stopSelectElementTarget(self):
@@ -99,8 +165,14 @@ class UIAutomationSelect:
         rect = contr.BoundingRectangle  # 返回 (left, top, right, bottom)
         web_control:WebControl|None  = WebUIAutomationSelect().in_which_web_control(contr, x, y)
         if None != web_control:
-            print('--------------------------------------')
-            self._draw_rect((round(web_control.view_port.x), round(web_control.view_port.y),round(web_control.view_port.width), round(web_control.view_port.height)), duration = -1)
+            web_target:WebTargetElement|None  = WebUIAutomationSelect().get_element_on_point(web_control, x, y)
+            if None == web_target:
+                return
+           # print(f'---------{round(web_target.rect.x)}-------{round(web_target.rect.y)}--------{round(web_target.rect.width)}--------{round(web_target.rect.height)}------')
+            self._draw_rect((round(web_target.rect.x),
+                            round(web_target.rect.y),
+                            round(web_target.rect.width),
+                            round(web_target.rect.height)), duration = -1)
             #todo web 选择
             pass
             return
@@ -145,21 +217,31 @@ class UIAutomationSelect:
             if button == mouse.Button.left:
                 self.stopSelectElementTarget()
                 contr = self.getUIElementTargetByPoint(x, y)
-                if WebUIAutomationSelect().in_which_web_control(contr, x, y):
+                web_control:WebControl|None  = WebUIAutomationSelect().in_which_web_control(contr, x, y)
+                if None != web_control:
+                    web_target:WebTargetElement|None  = WebUIAutomationSelect().get_element_on_point(web_control, x, y)
+                    if None == web_target:
+                        return
+                    self._draw_rect((round(web_target.rect.x),
+                            round(web_target.rect.y),
+                            round(web_target.rect.width),
+                            round(web_target.rect.height)), duration = 3)
+                    self._finish_select_web_target(True, web_target=web_target)
                     print('--------------------------------------')
                     #todo web 选择
                     pass
                 else:
                     self._redraw_control(contr)
-                self._finish_select_element_target(True, contr)
+                self._finish_select_ui_target(True, contr)
                 #self._redraw_control_by_point(x, y)
                 
             elif button == mouse.Button.right:
                 # right click: stop watcher
                 print("Right click received -> stopping watcher.")
-                self._finish_select_element_target(False, None)
+                self._finish_select_ui_target(False, None)
                 self.stopSelectElementTarget()
         except Exception as e:
+            traceback.print_exc()
             logger.warning(e)
 
     def _draw_rect(self, rect, duration= 0):

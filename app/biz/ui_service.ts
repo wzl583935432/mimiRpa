@@ -19,7 +19,7 @@ export  class UiService{
         const ui_api = conveyor.ui
         
         const selectTarget = await ui_api.startSelectElement();
-        
+        console.log(selectTarget)
         return selectTarget;
     }
 

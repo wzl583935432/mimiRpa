@@ -4,36 +4,19 @@ import json
 from playwright.async_api import async_playwright
 import threading
 import asyncio
-import uuid
+
 import queue
 from queue import Empty
 from .model.web_control import WebControl
 from .model.request_element_data import RequestElementData
 from .model.point import Point
 from .model.viewport_rect import ViewportRect
-from web_operation import ChromeOperation
-from dataclasses import dataclass
-from typing import Optional
+from .model.web_target_element import WebTargetElement
+from .web_operation import ChromeOperation
+from .model.call_info import CallInfo
 from loguru import logger
 import traceback
 
-@dataclass
-class CallInfo:
-    def  __init__(self, messageCode, config, requestData= None):
-        self.messgeId = uuid.uuid4()
-        self.messageCode = messageCode
-        self.requestData = requestData
-        self.responseData = None
-        self.response_event = threading.Event()
-        self.config = config
-
-    messgeId:str
-    messageCode:str
-    requestData:str
-    responseData:str
-    responseCode:str
-    response_event:threading.Event
-    config = {}
 
 
 class WebUIAutomationSelect:
@@ -176,40 +159,12 @@ class WebUIAutomationSelect:
         view_port = await web_content.get_viewport()
         return view_port
     
-    async def _start_select_element_target(self, config):
-        if not config:
-            return None
-        name = config['name']
-        if ((not name in self._web_contents)  or (not self._web_contents[name])):
-            return
-        web_content = self._web_contents[name] 
-        if not web_content:
-            print('get web content error!')
-            return None
-
-        await web_content.begin_select_element()
-
-    async def _stop_select_element_target(self, config):
-        if not config:
-            return None
-        name = config['name']
-        if ((not name in self._web_contents)  or (not self._web_contents[name])):
-            return
-        web_content = self._web_contents[name] 
-        if not web_content:
-            print('get web content error!')
-            return None
-
-        await web_content.end_select_element()
-
-        
-    
     def _playwright_request(self, call_info:CallInfo):
         self._request_queue.put(call_info)
         self._request_event.set()
         pass
 
-    def get_element_on_point(self, web_control:WebControl, x , y):
+    def get_element_on_point(self, web_control:WebControl, x , y)->WebTargetElement:
         if None == web_control:
             return None
         if None == web_control.config:
@@ -228,22 +183,6 @@ class WebUIAutomationSelect:
             print('not get element')
             return None
         return element_info
-        pass
-
-    def start_select_element_target(self):
-        print('web----')
-        for config in self._web_config.values():
-            call_info =  CallInfo('start_select_element_target', config) 
-            self._playwright_request(call_info=call_info)
-        
-        pass
-
-    def stop_all_select_element_target(self):
-        for config in self._web_config:
-            call_info =  CallInfo('stop_select_element_target', config) 
-            self._playwright_request(call_info=call_info)
-            pass
-        
         pass
 
 
@@ -270,7 +209,7 @@ class WebUIAutomationSelect:
             print('get view port error')
             return None
 
-        print(f'viewport  x {view_port['x']} y {view_port['y']} width {view_port['width']} height {view_port['height']}')
+        print(f'viewport  x {view_port.x} y {view_port.y} width {view_port.width} height {view_port.height}')
         if (view_port.x < x and 
             view_port.y < y and 
             x < view_port.x + view_port.width and 

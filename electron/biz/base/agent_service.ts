@@ -51,7 +51,7 @@ export class AgentService{
         const name = "agent";
         log.info(app.getAppPath())
         const pm = IPCService.getInstance().waitConnect(name, 10000);
-        const filePath = path.join(app.getAppPath(), "service", "agent", "main.py");
+        const filePath = path.join(app.getAppPath(), "service", "agent.py");
         log.info("应用目录:", filePath);
    
         // 启动 Python 程序
@@ -87,8 +87,11 @@ export class AgentService{
                 throw new  Error("消息对象不正确")
             }
             if(mobj.messageType === "response"){
+                console.log(mobj)
                 const callbackInfo = this.callbackCache[mobj.messageId];
+                console.log( this.callbackCache, callbackInfo)
                 if(callbackInfo){
+                    console.log('---------------------', mobj.body)
                     callbackInfo.resolve(mobj.body);
                 }
                 delete  this.callbackCache[mobj.messageId];
@@ -112,7 +115,7 @@ export class AgentService{
             const msg:BaseMessage<string> ={
                 bizCode:"select",
                 requestCode:"select_element",
-                messageId: uuidv4(),
+                messageId: messageId,
                 messageType:"request",
             }
             const str = JSON.stringify(msg);
@@ -137,11 +140,12 @@ export class AgentService{
                 resolve:resolve,
                 reject:rejects
             }
+            console.log('messageId', messageId)
             this.callbackCache[messageId] = callback;
             const msg:BaseMessage<string> ={
                 bizCode:"select",
                 requestCode:"stop_select_element",
-                messageId: uuidv4(),
+                messageId: messageId,
                 messageType:"request",
             }
             const str = JSON.stringify(msg);

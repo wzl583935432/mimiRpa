@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import List
-
+from .viewport_rect import ViewportRect
 @dataclass
 class WebTargetFrame:
     def __init__(self, index:int, name:str, url:str):
@@ -28,10 +28,11 @@ class WebTargetElementInFrame:
 
 @dataclass
 class WebTargetElement:
-    def __init__(self, parent_frames:List[WebTargetFrame], chains:List[WebTargetElementInFrame]):
+    def __init__(self, parent_frames:List[WebTargetFrame], chains:List[WebTargetElementInFrame], rect:ViewportRect):
         self.chains = chains
         self.parent_frames = parent_frames
-
+        self.rect = rect
         pass
     parent_frames:List[WebTargetFrame]
+    rect:ViewportRect
     chains:List[WebTargetElementInFrame]

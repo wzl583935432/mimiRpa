@@ -3,7 +3,7 @@ from decimal import Decimal
 
 @dataclass
 class ViewportRect:
-    def __init__(self, x:int, y:int , width:int, height:int, devicePixelRatio:Decimal):
+    def __init__(self, x:int, y:int , width:int, height:int, devicePixelRatio:Decimal|None):
         self.x = x
         self.y = y
         self.width = width
