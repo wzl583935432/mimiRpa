@@ -5,4 +5,8 @@ export const projectIpcSchema = {
     args: z.tuple([]),
     return: z.array(z.any()),
   },
+  'project_create_new': {
+    args: z.tuple([z.any()]), 
+    return: z.any(),
+  },
 }

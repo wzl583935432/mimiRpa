@@ -2,7 +2,6 @@
 // EditorService.ts
 
 import ComponentTypeDO from "@/lib/Model/Editor/ComponentTypeDO";
-import { ElementTarget } from "@/lib/Model/Editor/ElementTarget";
 import NodeDO from "@/lib/Model/Editor/NodeDO";
 
 export class EditorService {

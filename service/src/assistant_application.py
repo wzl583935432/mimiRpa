@@ -6,7 +6,7 @@ from web_socket_context import WebSocketContext
 from loguru import logger
 from controller.selector_controller import SelectController
 from common.exception.sys_exception import SYSException
-class AgentApplication:
+class AssistantApplication:
     _instance = None
     _lock = threading.Lock()  
     route = {}

@@ -15,7 +15,7 @@ export const handle = <T extends keyof typeof ipcSchemas>(
     try {
       const validatedArgs = validateArgs(channel, args)
       const result = await handler(...validatedArgs)
-
+      console.log(`IPC ${channel} result:`, result)
       return validateReturn(channel, result)
     } catch (error) {
       console.error(`IPC Error in ${channel}:`, error)

@@ -21,5 +21,13 @@ export class ProjectService {
         return projectList;
     }
 
+    public async CreateNewProject(projectInfo:ProjectInfoDO) : Promise<ProjectInfoDO> {
+        const conveyor = window.conveyor;
+        const projectApi = conveyor.project
+        const newProject = await projectApi.CreateNewProject(projectInfo);
+        console.warn('newProject', newProject);
+        return newProject;
+    }
+
 
 }

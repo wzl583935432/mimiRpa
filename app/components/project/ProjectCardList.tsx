@@ -4,11 +4,18 @@ import React, {useEffect, useState } from 'react';
 import {ProjectCard, Project} from './ProjectCard';
 import './ProjectList.css';
 import {ProjectService} from '@/app/biz/project_service';
+import { ProjectVersionStatus } from '@/lib/Model/Project/ProjectInfoDO';
 
 // 定义项目数据的类型
+interface ProjectOperationProps {
+  tabOption:string,
+  search:string
+  newProjectId?:string;
+}
+  // 这里可以添加需要的 props
+  
 
-
-const ProjectList: React.FC= () => {
+const ProjectList: React.FC <ProjectOperationProps>= ( {tabOption, search, newProjectId} ) => {
   // 使用 useState 钩子管理组件内部状态
   const [allProjects, setAllProjects] = useState<Project[]>(
     []);
@@ -17,7 +24,41 @@ const ProjectList: React.FC= () => {
 
  useEffect(() => {
     const fetchProjects = async () => {
-      const projects = await ProjectService.getInstance().GetProjectList();
+      let projects = await ProjectService.getInstance().GetProjectList();
+      projects = projects.filter(project => {
+        if (search && search.trim() !== '') {
+          const lowerCaseSearch = search.toLowerCase();
+          if (!project.name.toLowerCase().includes(lowerCaseSearch) &&
+              !(project.description && project.description.toLowerCase().includes(lowerCaseSearch))) {
+            return false;
+          }
+        }
+       // console.log('Filtering project:', project.name, 'with tabOption:', tabOption);
+        // 根据 tabOption 过滤项目
+        if (tabOption === 'published') {
+          if (!project.versions || project.versions.length === 0) {
+            return false;
+          }
+          for (const workflow of project.versions) {
+            if (workflow.status === ProjectVersionStatus.Published) {
+              return true;
+            } 
+          }
+          return false;
+        } else if (tabOption === 'develop') {
+          if (!project.versions || project.versions.length === 0) {
+            return true;
+          }
+          for (const workflow of project.versions) {
+            if (workflow.status === ProjectVersionStatus.Editor) {
+              return true;
+            } 
+          }
+          return false;
+        }
+        return true; // 'all' 选项显示所有项目
+      });
+
 
       setAllProjects(projects.map((p, index) => ({
         id: p.id,
@@ -28,7 +69,7 @@ const ProjectList: React.FC= () => {
       })))
     };
     fetchProjects();
-  }, []);
+  }, [tabOption, search, newProjectId]);
 
 
   // 切换项目运行状态的回调函数

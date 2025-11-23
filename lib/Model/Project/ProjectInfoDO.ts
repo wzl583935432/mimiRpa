@@ -6,12 +6,13 @@ export enum ProjectStatus{
 
 export enum ProjectVersionStatus{
     Editor,
-    Publish,
+    Published,
     Deleted
 }
 
 export interface ProjectVersionInfo{
     version:string,
+    fromVersion:string| null|undefined;
     status:ProjectVersionStatus
 }
 
@@ -23,6 +24,6 @@ export interface ProjectInfoDO{
     lastEditTime:number,
     createUser:string,
     description: string| null|undefined;
-    versions:Array<ProjectVersionInfo>
+    versions:Array<ProjectVersionInfo> |null;
 
 }

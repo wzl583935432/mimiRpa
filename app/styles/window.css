@@ -59,15 +59,18 @@
 
 .window-content {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
   position: relative;
 }
 
-/* Assign last children to use full height of window content */
+/* Assign last children to use full height of window content 
 .window-content div:last-child {
   height: 100%;
 }
+*/
+
+
 
 .window-titlebar {
   display: flex;

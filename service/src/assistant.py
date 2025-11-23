@@ -6,7 +6,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.join(current_dir, '..', '..')
 sys.path.insert(0, project_root)
 
-from agent_application import AgentApplication
+from assistant_application import AssistantApplication
 import threading
 from uiAutomation.web_ui_automation_select import WebUIAutomationSelect
 from uiAutomation.tk_window_manager import TkWindowManager
@@ -41,7 +41,7 @@ def main():
     change_to_app_dir()
     set_log()
     WebUIAutomationSelect().init_run()
-    t = threading.Thread(target=AgentApplication().start, daemon=True)
+    t = threading.Thread(target=AssistantApplication().start, daemon=True)
     t.start()
     TkWindowManager().start()
 

@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { Input, Select, Button } from 'antd';
 
 import { AimOutlined } from '@ant-design/icons';
-import SelectElement from './selectElement';
+import SelectElement from './SelectElement';
 /**
  * 核心渲染函数：根据配置对象的 type 字段渲染 antd 输入组件，并处理事件
  * * @param {string} fieldName - 字段名称（key）

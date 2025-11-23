@@ -9,12 +9,14 @@ export class EditorService {
 
     // 静态公共方法，用于获取唯一的实例
     public static getInstance(): EditorService {
-    // 检查实例是否已经存在，如果不存在则创建
-    if (!EditorService.instance) {
-        EditorService.instance = new EditorService();
+        // 检查实例是否已经存在，如果不存在则创建
+        if (!EditorService.instance) {
+            EditorService.instance = new EditorService();
+        }
+        return EditorService.instance;
     }
-    return EditorService.instance;
-    }
+
+    
 
 
     public queryNodeTreeData() :NodeDO[]{
