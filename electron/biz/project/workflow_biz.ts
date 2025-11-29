@@ -12,7 +12,7 @@ import fs from "fs";
 
  
  // workflow_biz.ts 用于管理整个工作流相关的业务逻辑 工作流下面有多个编辑图 一个工作流存放在一个数据库文件中
- export class WorkFlowBiz {
+ export class WorkflowBiz {
     private projectId: string;
     private projectVersion:string;
     private db:BetterSqlite3Database | null = null;

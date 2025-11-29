@@ -5,8 +5,15 @@ import path from 'path'
 import { UserService } from '../user_service';
 import { v4 as uuidv4 } from 'uuid';
 import { AppService } from '../app_service';
+import { WorkflowBiz } from './workflow_biz';
+import { WorkflowGraphEntity } from '@/electron/db/entity/workflow_graph_entity';
+import { NodePropertyEntity } from '@/electron/db/entity/node_property_entity';
+
 
 export class ProjectService{
+
+    private workflowBizMap: Map<string, WorkflowBiz> = new Map();
+
     private static readonly DB_SUFFIX = '.db';
 
     private static instance: ProjectService;
@@ -157,7 +164,7 @@ export class ProjectService{
 
 
 
-    public async GetProjectVersions(projectId:string):Promise<Array<string>>{
+    public  GetProjectVersions(projectId:string):Array<string>{
         const projectInfoList = this.readProjectsFromDisk();
         const projectInfo = projectInfoList.find(item => item.id === projectId)
      
@@ -207,7 +214,7 @@ export class ProjectService{
         return maxVersion;
     }
 
-    public async CreateProjectVersion(projectId:string, fromVersion:string):Promise<string>{
+    public async createProjectVersion(projectId:string, fromVersion:string):Promise<string>{
         const projectInfoList = this.readProjectsFromDisk();
         const projectInfo = projectInfoList.find(item => item.id === projectId)
         if(!projectInfo){
@@ -261,7 +268,7 @@ export class ProjectService{
         return true;
     }
 
-    public async DeleteProject(projectId:string):Promise<boolean>{
+    public deleteProject(projectId:string):boolean{
         const projectInfoList = this.readProjectsFromDisk();
         const projectInfo = projectInfoList.find(item => item.id === projectId)
         if(!projectInfo){
@@ -279,4 +286,42 @@ export class ProjectService{
         const projectList = this.readProjectsFromDisk();
         return projectList;
     }
+
+    public getProjectVersionMainGraph(projectId:string, projectVersion:string):WorkflowGraphEntity{
+        let workflowBiz = this.workflowBizMap.get(`${projectId}_${projectVersion}`);
+        if (!workflowBiz) {
+            workflowBiz = new WorkflowBiz(projectId, projectVersion);
+            workflowBiz.init();
+            this.workflowBizMap.set(`${projectId}_${projectVersion}`, workflowBiz);
+        }
+        const workflowGraphEntity = workflowBiz.getMainEditorGraph();
+        return workflowGraphEntity;
+    }
+
+
+    public queryProjectGraphData(projectId:string, projectVersion:string, nodeId?:string):WorkflowGraphEntity|null{
+
+        let workflowBiz = this.workflowBizMap.get(`${projectId}_${projectVersion}`);
+        if (!workflowBiz) {
+            workflowBiz = new WorkflowBiz(projectId, projectVersion);
+            workflowBiz.init();
+            this.workflowBizMap.set(`${projectId}_${projectVersion}`, workflowBiz);
+        }
+        const workflowGraphEntity = workflowBiz.getWorkflowGraphByNodeId(nodeId || "main");
+
+        return workflowGraphEntity;
+    }
+
+    public saveProjectGraphData(projectId:string, projectVersion:string, nodeId:string, data:string):boolean{   
+        let workflowBiz = this.workflowBizMap.get(`${projectId}_${projectVersion}`);
+        if (!workflowBiz) {
+            workflowBiz = new WorkflowBiz(projectId, projectVersion);
+            workflowBiz.init();
+            this.workflowBizMap.set(`${projectId}_${projectVersion}`, workflowBiz);
+        }
+        workflowBiz.saveContentByNodeId(nodeId, data);
+        return true;    
+    }
+       
+        
 }

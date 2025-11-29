@@ -53,9 +53,18 @@ export class AgentService{
         const pm = IPCService.getInstance().waitConnect(name, 10000);
         const filePath = path.join(app.getAppPath(), "service", "src", "assistant.py");
         log.info("应用目录:", filePath);
+
+        let pythonExcutor = "python";
+        if (process.platform === "win32") {
+            pythonExcutor =  "python.exe";
+        } else if (process.platform === "darwin") {
+            pythonExcutor = "python3";
+        } else {
+            pythonExcutor = "python3";
+        }
    
         // 启动 Python 程序
-        const pyProcess = spawn("python", [filePath, `--port=${port}`, `--name=${name}`], {
+        const pyProcess = spawn(pythonExcutor, [filePath, `--port=${port}`, `--name=${name}`], {
             stdio: "pipe", // 捕获输出
         });
         this.isinit = true;

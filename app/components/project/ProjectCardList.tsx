@@ -1,10 +1,11 @@
 // src/components/ProjectList.tsx
 
 import React, {useEffect, useState } from 'react';
-import {ProjectCard, Project} from './ProjectCard';
+import {ProjectCard} from './ProjectCard';
 import './ProjectList.css';
 import {ProjectService} from '@/app/biz/project_service';
-import { ProjectVersionStatus } from '@/lib/Model/Project/ProjectInfoDO';
+import { ProjectInfoDO, ProjectVersionStatus } from '@/lib/Model/Project/ProjectInfoDO';
+import { useProjectEditorStore } from '@/app/components/store/HomeStore';
 
 // 定义项目数据的类型
 interface ProjectOperationProps {
@@ -17,9 +18,12 @@ interface ProjectOperationProps {
 
 const ProjectList: React.FC <ProjectOperationProps>= ( {tabOption, search, newProjectId} ) => {
   // 使用 useState 钩子管理组件内部状态
-  const [allProjects, setAllProjects] = useState<Project[]>(
+  const [allProjects, setAllProjects] = useState<ProjectInfoDO[]>(
     []);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentProjects, setCurrentProjects] = useState<ProjectInfoDO[]>([]);
+  const [pageNumbers, setPageNumbers] = useState<number[]>([]);
+  const addEditorProject = useProjectEditorStore((state) => state.addEditorProject);
   const projectsPerPage = 6; // 每页显示的项目数量
 
  useEffect(() => {
@@ -60,49 +64,65 @@ const ProjectList: React.FC <ProjectOperationProps>= ( {tabOption, search, newPr
       });
 
 
-      setAllProjects(projects.map((p, index) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description || '暂无描述',
-        status: index % 2 === 0 ? 'running' : 'stopped', // 示例状态
-        data: p,
-      })))
+      setAllProjects(projects)
     };
     fetchProjects();
   }, [tabOption, search, newProjectId]);
 
 
   // 切换项目运行状态的回调函数
-  const handleToggleStatus = (id: string) => {
-    setAllProjects(prevProjects =>
-      prevProjects.map(project =>
-        project.id === id ? { ...project, status: project.status === 'running' ? 'stopped' : 'running' } : project
-      )
-    );
+  const handleToggleExecute = (id: string) => {
+
   };
 
   // 保存项目编辑的回调函数
-  const handleSaveEdit = (id: string, newName: string, newDescription: string) => {
-    setAllProjects(prevProjects =>
-      prevProjects.map(project =>
-        project.id === id ? { ...project, name: newName, description: newDescription } : project
-      )
-    );
+  const handleEditClick = (id: string, version: string) => {
+    const project = allProjects.find(proj => proj.id === id);
+    if (!project) {
+      alert('未找到对应的项目');
+      return;
+    }
+    addEditorProject(project, version);
   };
+
+  const handleNewVersion = (id: string, originVersion:string) => {
+    const project = allProjects.find(proj => proj.id === id);
+    if (!project) {
+      alert('未找到对应的项目');
+      return;
+    }
+    ProjectService.getInstance().createNewProjectVersion(id, originVersion).then((newProjectVersion) => {
+      console.log('新版本创建成功:', newProjectVersion);
+    });
+  }
 
   // 改变页码
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
   };
 
-  // 计算当前页需要显示的项目
-  const indexOfLastProject = currentPage * projectsPerPage;
-  const indexOfFirstProject = indexOfLastProject - projectsPerPage;
-  const currentProjects = allProjects.slice(indexOfFirstProject, indexOfLastProject);
+  useEffect(() => {
+    setCurrentPage(1); // 切换 tab 或搜索时重置为第一页
+     // 计算当前页需要显示的项目（使用第一页）
+    const page = 1;
+    const indexOfLastProject = page * projectsPerPage;
+    const indexOfFirstProject = indexOfLastProject - projectsPerPage;
+    const currentProjects = allProjects.slice(indexOfFirstProject, indexOfLastProject);
+    setCurrentProjects(currentProjects);
+    // 计算总页数
+    const totalPages = Math.ceil(allProjects.length / projectsPerPage);
+    const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+    setPageNumbers(pageNumbers);
 
-  // 计算总页数
-  const totalPages = Math.ceil(allProjects.length / projectsPerPage);
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+  }, [allProjects]);
+
+  useEffect(() => {
+    // 计算当前页需要显示的项目
+    const indexOfLastProject = currentPage * projectsPerPage;
+    const indexOfFirstProject = indexOfLastProject - projectsPerPage;
+    const currentProjects = allProjects.slice(indexOfFirstProject, indexOfLastProject);
+    setCurrentProjects(currentProjects);
+  }, [currentPage, allProjects]);
 
   return (
     <div className="project-list-container">
@@ -111,8 +131,9 @@ const ProjectList: React.FC <ProjectOperationProps>= ( {tabOption, search, newPr
           <ProjectCard
             key={project.id}
             project={project}
-            onToggleStatus={handleToggleStatus}
-            onSaveEdit={handleSaveEdit}
+            onToggleExecute={handleToggleExecute}
+            onToggleEdit={handleEditClick}
+            onNewVersion={handleNewVersion}
           />
         ))}
       </div>
