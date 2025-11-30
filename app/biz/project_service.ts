@@ -29,5 +29,18 @@ export class ProjectService {
         return newProject;
     }
 
+    public async createNewProjectVersion(projectId:string, projectVersion:string) : Promise<void> {
+        const conveyor = window.conveyor;
+        const projectApi = conveyor.project
+        return await projectApi.CreateNewProjectVersion(projectId, projectVersion);
+    }   
+    
+    public async getProjectMainGraph(projectId:string, projectVersion:string) :Promise<string>{
+        const conveyor = window.conveyor;
+        const projectApi = conveyor.project
+        return await projectApi.QueryProjectMainGraphData(projectId, projectVersion);
+    }
+
+    
 
 }

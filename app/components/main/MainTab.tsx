@@ -19,19 +19,30 @@ const initialTabData: Tab[] = [
 ];
 
 const MainTab = () => {
-    const [tabData, setTabData] = useState(initialTabData);
-    const  projectEditorItems  = useProjectEditorStore(((state) => state.projectEditorItems));
+  const newEditId  = useProjectEditorStore(((state) =>state.newItemId))
+  const [tabData, setTabData] = useState(initialTabData);
+  const  projectEditorItems  = useProjectEditorStore(((state) => state.projectEditorItems));
 
   // 1. 使用 useState 追踪当前激活的 Tab ID，默认为第一个标签的 ID
   const [activeTabId, setActiveTabId] = useState(tabData[0].id);
+
+  const handleClose = (id:string) =>{
+
+  }
+  const handleEditorExecute = () =>{
+
+  }
  useEffect(() => {
     const fetchProjects = async () => {
-        const tabs = [...initialTabData];
+      const tabs = [...initialTabData];
       projectEditorItems.forEach(item => {
             const itemTab: Tab = {
                 id: item.id,
-                title: item.name,
-                content: <Editor/>
+                title: item.data.name,
+                content: <Editor editorId= {item.id} 
+                projectId= {item.data.id} 
+                projectVersion= {item.version} 
+                onExecuteEvent={handleEditorExecute}/>
             };
             tabs.push(itemTab);
         });
@@ -41,24 +52,54 @@ const MainTab = () => {
         } else {
         //    setActiveTabId('home');
         }
+        if(newEditId){
+          setActiveTabId(newEditId)
+        }
     };
     fetchProjects();
-    }, [projectEditorItems]);
-  
+    }, [projectEditorItems, newEditId]);
+
   
   // 渲染 Tab 标题/导航区域
   const renderTabHeaders = () => (
     <div className="tab-headers">
       {tabData.map((tab) => (
-        <button
+
+        <div
           key={tab.id}
-          // 根据 activeTabId 动态添加 'active' 类名
-          className={`tab-button ${activeTabId === tab.id ? 'active' : ''}`}
-          // 点击时更新状态，切换标签
+          style={{
+            color:"GrayText",
+            padding: "8px 12px",
+            borderBottom: activeTabId === tab.id ? "1px solid blue" : "1px solid transparent",
+            display: "flex",
+            alignItems: "center",
+            cursor: "pointer",
+            marginRight: "1px",
+            background: activeTabId === tab.id ? "#f0f5f5" : "white",
+            borderRadius: "4px 4px 0 0",
+          }}
           onClick={() => setActiveTabId(tab.id)}
         >
-          {tab.title}
-        </button>
+          <span>{tab.title}</span>
+
+          {/* 第一个 tab 不显示关闭按钮 */}
+          {tab.id !== 'home' && (
+            <span
+              onClick={(e) => {
+                e.stopPropagation(); // 避免触发切换
+                handleClose(tab.id);
+              }}
+              style={{
+                marginLeft: "8px",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              ×
+            </span>
+          )}
+        </div>
+
       ))}
     </div>
   );

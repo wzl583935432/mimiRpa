@@ -29,6 +29,10 @@ export const projectIpcSchema = {
     args: z.tuple([z.string(), z.string()]), // projectId, projectVersion
     return: z.any(),
   },
+  'query_main_gragh_data': {
+    args: z.tuple([z.string(), z.string()]), // projectId, projectVersion, nodeId
+    return: z.any(),
+  },
   'project_query_graph_data': {
     args: z.tuple([z.string(), z.string(), z.string().optional()]), // projectId, projectVersion, nodeId
     return: z.any(),

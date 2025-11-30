@@ -287,7 +287,7 @@ export class ProjectService{
         return projectList;
     }
 
-    public getProjectVersionMainGraph(projectId:string, projectVersion:string):WorkflowGraphEntity{
+    private getProjectVersionMainGraph(projectId:string, projectVersion:string):WorkflowGraphEntity{
         let workflowBiz = this.workflowBizMap.get(`${projectId}_${projectVersion}`);
         if (!workflowBiz) {
             workflowBiz = new WorkflowBiz(projectId, projectVersion);
@@ -296,6 +296,14 @@ export class ProjectService{
         }
         const workflowGraphEntity = workflowBiz.getMainEditorGraph();
         return workflowGraphEntity;
+    }
+
+    public queryProjectMainGraphContent(projectId:string, projectVersion:string):string|null {
+        const graphInfo = this.getProjectVersionMainGraph(projectId, projectVersion);
+        if(graphInfo){
+            return graphInfo.content;
+        }
+        return null;
     }
 
 

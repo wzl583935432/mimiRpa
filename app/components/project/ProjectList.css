@@ -148,3 +148,42 @@ h1 {
 .page-btn:hover:not(.active) {
   background-color: #d6d9dc;
 }
+
+/* mainContainer 是外层的 Flex 容器 */
+.lineContainer {
+    /* 启用 Flexbox */
+    display: flex;
+    
+    /* 关键属性：将第一个子元素推到最左边，第二个子元素推到最右边 */
+    justify-content: space-between;
+    
+    /* 可选：设置一个最大宽度，使其在页面中央，并给一个内边距 */
+    max-width: 1200px;
+    margin: 0 0; /* 居中 */
+    padding: 0px;
+    border: 0px solid #ccc;
+}
+
+/* 可选：为左右两组元素设置一些样式，使其更美观 */
+.leftGroup, 
+.rightGroup {
+    /* 为每组元素设置一个宽度，防止内容过多时挤压 */
+    /* flex: 1; */ /* 也可以使用 flex: 1 来让它们平分空间 */
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.leftGroup {
+    background-color: #ffffff; /* 浅蓝色背景 */
+}
+
+.rightGroup {
+    background-color: #ffffff; /* 浅橙色背景 */
+}
+
+/* 确保表单元素不换行 */
+.rightGroup form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}

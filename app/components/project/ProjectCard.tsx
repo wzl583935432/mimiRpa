@@ -1,9 +1,10 @@
 // src/components/ProjectCard.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './ProjectList.css'; // 使用与父组件相同的样式文件
 import { ProjectVersionStatus } from '@/lib/Model/Project/ProjectInfoDO';
 
 import { ProjectInfoDO } from '@/lib/Model/Project/ProjectInfoDO';
+import  MoreMenu, {MenuItem} from './MoreMenu';
 
 // 定义组件的 props 类型
 interface ProjectCardProps {
@@ -14,14 +15,26 @@ interface ProjectCardProps {
 }
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onToggleExecute, onToggleEdit, onNewVersion }) => {
-  const [isRunning, setIsRunning] = useState(false);
+  const [canRunning, setCanRunning] = useState(false);
   const [editingName, setEditingName] = useState(project.name);
   const [editingDescription, setEditingDescription] = useState(project.description);
-  
+
   // 点击进入编辑模式
   const handleEditClick = () => {
-    setEditingName(project.name);
-    setEditingDescription(project.description);
+    let version: string | null = null;
+    for (const workflow of project.versions || []) {
+      if (workflow.status === ProjectVersionStatus.Editor) {
+        if (version === null || compareVersions(workflow.version, version) > 0) {
+          version = workflow.version;
+        }
+      }
+    }
+    if(version===null){
+      alert("项目没有编辑状态的版本");
+      return;
+    }
+
+    onToggleEdit(project.id, version )
   };
 
   useEffect(() => {
@@ -34,7 +47,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onToggleExecu
     if(project.versions){
       for (const workflow of project.versions) {
         if (workflow.status === ProjectVersionStatus.Published) {
-          setIsRunning(true);
+          setCanRunning(true);
           break;
         }
       }
@@ -82,6 +95,39 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onToggleExecu
    
   };
 
+  const handleMoreOptionsClick = () => {
+    // 这里可以实现更多选项的逻辑
+  }
+
+
+  const menuItems: MenuItem[] = [
+    {
+      id: "versionlist",
+      label: "版本列表",
+      onClick: () => console.log("版本列表"),
+    },
+    {
+      id: "newVersion",
+      label: "新建版本",
+      onClick: () => {
+        let version: string | null = null;
+        for (const workflow of project.versions || []) {
+          if (workflow.status === ProjectVersionStatus.Published) {
+            if (version === null || compareVersions(workflow.version, version) > 0) {
+              version = workflow.version;
+            }
+          }
+        }
+        onNewVersion(project.id, version??'');
+      },
+    },
+    {
+      id: "delete",
+      label: "删除",
+      onClick: () => console.log("删除"),
+    },
+  ];
+
   // 输入框变化
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -98,31 +144,33 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onToggleExecu
      
         <div className="card-editor">
           <label>
-            项目名:
-            <input
-              type="text"
-              name="editingName"
-              value={editingName}
-              onChange={handleInputChange}
-            />
+            项目名: {editingName}
           </label>
           <label>
-            项目信息:
-            <textarea
-              name="editingDescription"
-              value={editingDescription??''}
-              onChange={handleInputChange}
-            />
+            项目信息:{editingDescription??''}
           </label>
-                    <button
-              className={`run-btn ${isRunning ? 'running' : ''}`}
+        </div>
+         <div className='lineContainer'>
+      
+      {/* 1. 左侧元素组 */}
+      <div className="leftGroup">
+                 {
+            canRunning?  <button
+              className={`run-btn ${canRunning ? 'running' : ''}`}
               onClick={handleExecuteClick}
             >
-              {isRunning ? '停止' : '运行'}
-            </button>
-          <button className="edit-btn" onClick={handleEditClick}>
+              {canRunning ? '运行' :""}
+            </button>:null
+          }
+          
+            <button className="edit-btn" onClick={handleEditClick}>
               编辑
-          </button>
+            </button>
+      </div>
+      <div className="rightGroup">   
+          <MoreMenu items={menuItems} ></MoreMenu>
+      </div>
+      
         </div>
     </div>
   );

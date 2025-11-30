@@ -1,48 +1,61 @@
 import React, {useEffect, useState} from 'react';
 import { Tree, TreeProps } from 'antd';
-import { FileOutlined, FolderOutlined } from '@ant-design/icons';
+import type { TreeDataNode } from 'antd';
+import { CarryOutOutlined } from '@ant-design/icons';
 import { EditorService } from '@/app/biz/editor_service';
 import NodeDO from '@/lib/Model/Editor/NodeDO';
 
-const { TreeNode  } = Tree;
+
+interface NodeTreeProb{
+    setCollapsed: (iscollapsed:boolean)=> void;
+}
+
+export const NodeTreeArea : React.FC<NodeTreeProb> =  ({setCollapsed})=> {
+  const [treeData, setTreeData] = useState<TreeDataNode[]>([]);
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
 
 
-export const NodeTreeArea =  ()=> {
-  const [treeData, setTreeData] = useState<NodeDO[]>([]);
+  const NodeDoToTreeDataNode = (nodedos:NodeDO[]):TreeDataNode[] =>{
+    const treeDataNodes:TreeDataNode[] = [];
+    nodedos.forEach((item)=>{
+      if(!item){
+        return;
+      }
+      const key = item.isLeaf? item.componentType:item.id
+      const treeDataNode:TreeDataNode = {
+        key: key,
+        title:(<div>{item.originName} </div>),
+        icon: <CarryOutOutlined />,
+        isLeaf: item.isLeaf,
+        children:[]
+      }
+      if(item.children){
+        treeDataNode.children = NodeDoToTreeDataNode(item.children)
+      }
+      treeDataNodes.push(treeDataNode)
+    })
+    return treeDataNodes
+  }
+
   useEffect(() => {
     const fetchTreeData = async () => {
       const data = await EditorService.getInstance().queryNodeTreeData() as NodeDO[];
-      setTreeData(data);
+      const treeDataNodes = NodeDoToTreeDataNode(data)
+      setTreeData(treeDataNodes);
     }; 
     fetchTreeData();
     }, []); 
 
-// 渲染节点，叶子节点前加 File 图标，目录节点前加 Folder 图标
-function renderTreeNodes(data: any[]) {
-  return data.map((item) => {
-    const nodeTitle = (
-      <span>
-        {item.isLeaf ? <FileOutlined style={{ marginRight: 6 }} /> : <FolderOutlined style={{ marginRight: 6 }} />}
-        {item.originName}
-      </span>
-    );
+    
+  const handleOnCollapsed = () =>{
+    setCollapsed(!isLeftCollapsed)
+    setIsLeftCollapsed(!isLeftCollapsed)
+  }
 
-    const nodeProps = {
-      key: item.componentType,
-      title: nodeTitle,
-      name: item.originName,
-      isLeaf: item.isLeaf,
-      draggable: !!item.isLeaf, // 只有叶子能拖拽
-    };
 
-    if (item.children) {
-      return <TreeNode {...nodeProps}>{renderTreeNodes(item.children)}</TreeNode>;
-    }
-    return <TreeNode {...nodeProps} />;
-  });
-}
+  const onDragStart: TreeProps['onDragStart'] = (info) => {
 
-const onDragStart: TreeProps['onDragStart'] = (info) => {
+    console.log('--------', info);
     const node = info.node;
     if (node.isLeaf) {
       info.event.dataTransfer.setData(
@@ -50,18 +63,27 @@ const onDragStart: TreeProps['onDragStart'] = (info) => {
         JSON.stringify({ key: node.key}),
       );
     }
- 
   };
 
 
   return (
-    <Tree
+    <div>
+      <button 
+          className="toggle-btn left-toggle"
+          onClick={handleOnCollapsed}
+        >
+          {isLeftCollapsed ? '→' : '←'}
+      </button>
+      <Tree style={{ marginTop: "36px"}}
+      showLine={true}
       draggable
       blockNode
       defaultExpandAll
       onDragStart={onDragStart}
+      treeData={treeData}
     >
-      {renderTreeNodes(treeData)}
     </Tree>
+    </div>
+
   );
 }

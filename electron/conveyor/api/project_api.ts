@@ -9,5 +9,6 @@ export class ProjectApi extends ConveyorApi {
       DeleteProject = (projectId:string) => this.invoke('project_delete', projectId)
       DeleteProjectVersion = (projectId:string, projectVersion:string) => this.invoke('project_delete_version', projectId, projectVersion)
       QueryProjectGraphData = (projectId:string, projectVersion:string, nodeId?:string) => this.invoke('project_query_graph_data', projectId, projectVersion, nodeId)
+      QueryProjectMainGraphData = (projectId:string, projectVersion:string) => this.invoke('query_main_gragh_data', projectId, projectVersion)
       SaveProjectGraphData = (projectId:string, projectVersion:string, nodeId:string, data:string) => this.invoke('project_save_graph_data', projectId, projectVersion, nodeId, data)
 }

@@ -6,12 +6,12 @@ import CanvasArea from './CanvasArea';
 import PropertyArea from './PropertyArea';
 import RuntimeArea from './RuntimeArea';
 
-interface LayoutProps {
-  leftContent?: React.ReactNode;
-  topContent?: React.ReactNode;
-  bottomContent?: React.ReactNode;
-  centerContent?: React.ReactNode;
-  rightContent?: React.ReactNode;
+
+interface EditorProps {
+  editorId:string,
+  projectId:string,
+  projectVersion:string,
+  onExecuteEvent:() => void;
 }
 
 // 定义一个 Ref 类型，用于访问 C 组件暴露的方法
@@ -23,7 +23,7 @@ interface CCanvasRefHandle {
 }
 
 
-const Editor: React.FC<LayoutProps> = () => {
+const Editor: React.FC<EditorProps> = () => {
 // 1. 用于存储 C 组件实例的 Ref
     const cRef = useRef<CCanvasRefHandle>(null); 
 
@@ -71,24 +71,16 @@ const Editor: React.FC<LayoutProps> = () => {
     <div className="layout-container">
       <div className={`top-panel ${isTopCollapsed ? 'collapsed' : ''}`}>
         <div className="panel-content">
-          <MenuArea onSaveTriggered={handleBClickSave} execute={handleClickExecute}/>
+          <MenuArea onSaveTriggered={handleBClickSave} 
+          execute={handleClickExecute} 
+          setCollapsed = {(isCollapsed)=>setIsTopCollapsed(isCollapsed)}/>
         </div>
-        <button 
-          className="toggle-btn top-toggle"
-          onClick={() => setIsTopCollapsed(!isTopCollapsed)}
-        >
-          {isTopCollapsed ? '↓' : '↑'}
-        </button>
       </div>
 
       <div className={`left-panel ${isLeftCollapsed ? 'collapsed' : ''}`}>
-        <button 
-          className="toggle-btn left-toggle"
-          onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
-        >
-          {isLeftCollapsed ? '→' : '←'}
-        </button>
-        {!isLeftCollapsed && <div className="panel-content"><NodeTreeArea/></div>}
+        <div className="panel-content">
+          <NodeTreeArea setCollapsed={(isCollapsed)=>setIsLeftCollapsed(isCollapsed)}/>
+          </div>
       </div>
 
       <div className="center-panel">
@@ -97,23 +89,11 @@ const Editor: React.FC<LayoutProps> = () => {
       </div>
 
       <div className={`right-panel ${isRightCollapsed ? 'collapsed' : ''}`}>
-        <button 
-          className="toggle-btn right-toggle"
-          onClick={() => setIsRightCollapsed(!isRightCollapsed)}
-        >
-          {isRightCollapsed ? '←' : '→'}
-        </button>
-        {!isRightCollapsed && <div className="panel-content"><PropertyArea/></div>}
+         <div className="panel-content"><PropertyArea setCollapsed={ (isCollapsed) => setIsRightCollapsed(isCollapsed)}/></div>
       </div>
 
       <div className={`bottom-panel ${isBottomCollapsed ? 'collapsed' : ''}`}>
-        <button 
-          className="toggle-btn bottom-toggle"
-          onClick={() => setIsBottomCollapsed(!isBottomCollapsed)}
-        >
-          {isBottomCollapsed ? '↑' : '↓'}
-        </button>
-        <div className="panel-content"><RuntimeArea/></div>
+        <div className="panel-content"><RuntimeArea setCollapsed={(isCollapsed) => setIsBottomCollapsed(isCollapsed)}/></div>
       </div>
     </div>
   );

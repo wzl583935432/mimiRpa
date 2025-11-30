@@ -8,12 +8,19 @@ export interface MenuProps {
   // 它接收一个参数：B 组件想要保存的数据（类型为 string）。
   onSaveTriggered: () => void;
   execute:()=> void;
+  setCollapsed: (iscollapsed:boolean)=> void;
 }
 
-const MenuArea: React.FC<MenuProps> = ({ onSaveTriggered,execute }) => {
+const MenuArea: React.FC<MenuProps> = ({ onSaveTriggered,execute, setCollapsed }) => {
+  const [isTopCollapsed, setIsTopCollapsed] = useState(false);
     const handleSaveClick = () => {
     onSaveTriggered(); 
   };
+
+  const handleOnCollapsed = () =>{
+    setCollapsed(!isTopCollapsed)
+    setIsTopCollapsed(!isTopCollapsed)
+  }
 
   const handleExecuteClick =() =>{
     execute();
@@ -24,6 +31,12 @@ const MenuArea: React.FC<MenuProps> = ({ onSaveTriggered,execute }) => {
      <Space>
         <Button onClick={handleSaveClick} type="primary">保存</Button> 
         <Button onClick={handleExecuteClick} type='primary'> 运行</Button>
+        <button 
+          className="toggle-btn top-toggle"
+          onClick={handleOnCollapsed}
+        >
+          {isTopCollapsed ? '↓' : '↑'}
+        </button>
      </Space>
 
     </div>
