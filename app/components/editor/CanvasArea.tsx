@@ -12,6 +12,7 @@ import { useSelectedComponentStore } from '@/app/components/store/EditorStore';
 
 
 interface CanvasProps {
+    data:string;
     onDataSaved: (status: string) => void;
 }
 

@@ -1,6 +1,8 @@
 import { ProjectService } from "@/app/biz/project_service";
-import { InteractionFilled } from "@ant-design/icons";
 import { useEffect, useState } from "react";
+import {WorkflowEditorBiz} from "@/app/biz/workflow_editor_biz"
+import CanvasArea from "./CanvasArea"
+import { da } from "zod/v4/locales";
 
 interface WorkflowEditorProb{
     projectId:string;
@@ -10,21 +12,33 @@ interface WorkflowEditorProb{
 interface WorkflowGraphEditor{
     id:string;
     title:string;
-
+    content: React.JSX.Element;
 }
 
 const WorkflowEditor: React.FC<WorkflowEditorProb> = ({projectId, version}) => {
+    const workflowEditorBiz = new WorkflowEditorBiz(projectId, version)
     const [editors,setEditors] = useState<WorkflowGraphEditor[]>([]);
     const [activeTabId, setActiveTabId] = useState(editors[0].id);
 
     const handleClose =(id:string) =>{
-
+      if('main'===id){
+        return
+      }
+      const exsitEditors = editors.filter(editor => editor.id !== id)
+      setEditors(exsitEditors);
     }
 
     useEffect(()=>{
         const load = async () => {
-    const data = await ProjectService.getInstance().getProjectMainGraph(projectId, version);
-    console.log(data);
+        const data = await workflowEditorBiz.getProjectMainGraph();
+        const  mainGraph: WorkflowGraphEditor = {
+          id:"main",
+          title:"首页",
+          content:<CanvasArea data = {data}  ref={cRef} // ⚠️ 使用 Ref 访问 C
+                onDataSaved={handleCResult}></CanvasArea>
+        }
+        const newEditots = [mainGraph]
+        setEditors(newEditots)
   };
 
   load();
