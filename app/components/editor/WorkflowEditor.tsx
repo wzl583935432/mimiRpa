@@ -1,6 +1,7 @@
 import { useEffect, useRef , useState, useCallback} from "react";
 import {WorkflowEditorBiz} from "@/app/biz/workflow_editor_biz"
 import CanvasArea from "./CanvasArea"
+import './WorkflowEditor.css'
 
 interface WorkflowEditorProb{
     projectId:string;
@@ -23,7 +24,7 @@ interface WorkflowGraphEditor{
 const WorkflowEditor: React.FC<WorkflowEditorProb> = ({projectId, version}) => {
     const workflowEditorBiz = new WorkflowEditorBiz(projectId, version)
     const [editors,setEditors] = useState<WorkflowGraphEditor[]>([]);
-    const [activeTabId, setActiveTabId] = useState(editors[0].id);
+    const [activeTabId, setActiveTabId] = useState("");
     const canvasRefs = useRef<Map<string, CCanvasRefHandle>>(new Map());
   
     const handleClose =(id:string) =>{
@@ -57,6 +58,7 @@ const WorkflowEditor: React.FC<WorkflowEditorProb> = ({projectId, version}) => {
                 onDataSaved={handleCResult}></CanvasArea>
         }
         const newEditots = [mainGraph]
+        setActiveTabId('main')
         setEditors(newEditots)
   };
 
@@ -85,7 +87,7 @@ const WorkflowEditor: React.FC<WorkflowEditorProb> = ({projectId, version}) => {
           <span>{tab.title}</span>
 
           {/* 第一个 tab 不显示关闭按钮 */}
-          {tab.id !== 'home' && (
+          {tab.id !== 'main' && (
             <span
               onClick={(e) => {
                 e.stopPropagation(); // 避免触发切换
@@ -120,7 +122,7 @@ const WorkflowEditor: React.FC<WorkflowEditorProb> = ({projectId, version}) => {
   };
 
   return (
-    <div className="menuArea-container">
+    <div className="editor-container">
       {/* 标签头位于上方 */}
       {renderTabHeaders()}
       

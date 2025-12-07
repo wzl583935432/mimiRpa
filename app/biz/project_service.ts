@@ -17,7 +17,7 @@ export class ProjectService {
         const projectApi = conveyor.project
         
         const projectList = await projectApi.QueryProjectList();
-        console.warn('projectList', projectList);
+        //console.warn('projectList', projectList);
         return projectList;
     }
 

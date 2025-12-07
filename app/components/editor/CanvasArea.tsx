@@ -30,6 +30,37 @@ const CanvasArea = forwardRef<CRefHandle, CanvasProps>(({ onDataSaved }, ref) =>
   const [componentTypes, setComponentTypes] = useState<Record<string, ComponentTypeDO>>({});
   const componentTypesRef = useRef<Record<string, ComponentTypeDO>>({});
 
+  useEffect(() => {
+    const graph = graphRef.current
+    if (!graph) return
+
+    let spacePressed = false
+
+    const down = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !spacePressed) {
+        spacePressed = true
+        graph.enablePanning()
+        graph.container.style.cursor = 'grab'
+      }
+    }
+
+    const up = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        spacePressed = false
+        graph.disablePanning()
+        graph.container.style.cursor = 'default'
+      }
+    }
+
+    document.addEventListener('keydown', down)
+    document.addEventListener('keyup', up)
+
+    return () => {
+      document.removeEventListener('keydown', down)
+      document.removeEventListener('keyup', up)
+    }
+  }, [graphRef])
+
   // C 内部的保存逻辑
   const executeSave = useCallback(() => {
     console.log("执行保存")
@@ -97,8 +128,7 @@ const CanvasArea = forwardRef<CRefHandle, CanvasProps>(({ onDataSaved }, ref) =>
     // 创建图形实例
     const graph = new Graph({
       container: containerRef.current,
-      width: containerRef.current?.offsetWidth || 800,
-      height: containerRef.current?.offsetHeight || 600,
+      autoResize: true, 
       grid: {
         size: 10,
         visible: true,
