@@ -1,13 +1,18 @@
-import { ProjectService } from "@/app/biz/project_service";
-import { useEffect, useState } from "react";
+import { useEffect, useRef , useState, useCallback} from "react";
 import {WorkflowEditorBiz} from "@/app/biz/workflow_editor_biz"
 import CanvasArea from "./CanvasArea"
-import { da } from "zod/v4/locales";
 
 interface WorkflowEditorProb{
     projectId:string;
     version:string;
 }
+
+// 定义一个 Ref 类型，用于访问 C 组件暴露的方法
+interface CCanvasRefHandle {
+    // C 组件暴露出来的当前数据
+    getCurrentData: () => string;
+}
+
 
 interface WorkflowGraphEditor{
     id:string;
@@ -19,7 +24,8 @@ const WorkflowEditor: React.FC<WorkflowEditorProb> = ({projectId, version}) => {
     const workflowEditorBiz = new WorkflowEditorBiz(projectId, version)
     const [editors,setEditors] = useState<WorkflowGraphEditor[]>([]);
     const [activeTabId, setActiveTabId] = useState(editors[0].id);
-
+    const canvasRefs = useRef<Map<string, CCanvasRefHandle>>(new Map());
+  
     const handleClose =(id:string) =>{
       if('main'===id){
         return
@@ -28,13 +34,26 @@ const WorkflowEditor: React.FC<WorkflowEditorProb> = ({projectId, version}) => {
       setEditors(exsitEditors);
     }
 
+
+    
+
+    const handleCResult = useCallback((status: string) => {
+          
+      }, []);
+
     useEffect(()=>{
         const load = async () => {
         const data = await workflowEditorBiz.getProjectMainGraph();
+
+        const handleRef = (instance: CCanvasRefHandle | null) => {
+          if (instance) {
+            canvasRefs.current.set("main", instance);
+          }
+        };
         const  mainGraph: WorkflowGraphEditor = {
           id:"main",
           title:"首页",
-          content:<CanvasArea data = {data}  ref={cRef} // ⚠️ 使用 Ref 访问 C
+          content:<CanvasArea data = {data}  ref={handleRef} // ⚠️ 使用 Ref 访问 C
                 onDataSaved={handleCResult}></CanvasArea>
         }
         const newEditots = [mainGraph]
