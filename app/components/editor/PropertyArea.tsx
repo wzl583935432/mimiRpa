@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Form, message  } from 'antd';
 import './Editor.css';
-import { useSelectedComponentStore } from '../store/EditorStore';
+import { useSelectedNodeStore } from '../store/EditorStore';
 import {InputRenderControl} from './InputRenderControl';
+import {WorkflowEditorBiz} from '@/app/biz/workflow_editor_biz'
 
 interface PropertyProb{
   setCollapsed: (iscollapsed:boolean)=> void; 
@@ -10,57 +11,64 @@ interface PropertyProb{
 
 
 const PropertyArea : React.FC<PropertyProb> = ({setCollapsed}) => {
-  const selectedComponent = useSelectedComponentStore((state) => state.selectedComponent);
+  const selectedComponent = useSelectedNodeStore((state) => state.selectedValue);
   const [isRightCollapsed, setIsRightCollapsed] = useState(false);
-  const editComponentProperty = useSelectedComponentStore((state) => state.editComponentProperty);
-  const [filedProperties, setFiledProperties] = useState(() =>{
-    const mapproperties: Record<string, any> = {};
-    const properties: Array<{ id: string; [key: string]: any }> = selectedComponent.componentType?.propertes ?? [];
-    properties.forEach((config) => {
-     mapproperties[config.id] = config;
-    });
-    return mapproperties;
 
-  });
+  const [filedProperties, setFiledProperties] = useState({});
    // 1. 根据配置生成初始值并存入本地 state
-  const [formData, setFormData] = useState(() => {
-    const initialData: Record<string, any> = {};
-    const properties: Array<{ id: string; [key: string]: any }> =
-     selectedComponent.componentType?.propertes ?? [];
-    properties.forEach((config) => {
-      if(selectedComponent.properties[config.id])
-        {
-          initialData[config.id] = selectedComponent.properties[config.id];
-        }else{
-          initialData[config.id] = config.defaultValue;
-        }
+  const [formData, setFormData] = useState({});
 
-    });
-    return initialData;
-  });
+  const queryProperties = async (projectId, projectVersion, nodeId) =>{
+    const workflowEditorBiz:WorkflowEditorBiz = new WorkflowEditorBiz(projectId, projectVersion);
+    return await workflowEditorBiz.QueryNodeProperties(nodeId);
+  }
 
-  useEffect(()=>{
-    const data: Record<string, any> = {};
-    const properties: Array<{ id: string; [key: string]: any }> =
-     selectedComponent.componentType?.propertes ?? [];
-    properties.forEach((config) => {
-      if(selectedComponent.properties[config.id])
-        {
-          data[config.id] = selectedComponent.properties[config.id];
-        }else{
-          data[config.id] = config.defaultValue;
-        }
+  const updateProperties = async (projectId, projectVersion, nodeId, data) =>{
+    const workflowEditorBiz:WorkflowEditorBiz = new WorkflowEditorBiz(projectId, projectVersion);
+    return await workflowEditorBiz.saveNodeProperties(nodeId, data);
+  }
 
-    });
-    setFormData(data)
-      
-    const mapproperties: Record<string, any> = {};
-    properties.forEach((config) => {
-     mapproperties[config.id] = config;
-    });
-    setFiledProperties(mapproperties);
+  useEffect(() => {
+    let cancelled = false;
 
-  },[selectedComponent])
+    const run = async () => {
+      if (!selectedComponent) return;
+
+      const data: Record<string, any> = {};
+      const properties = selectedComponent.componentType?.propertes ?? [];
+
+      const oldProperties = await queryProperties(
+        selectedComponent.projectId,
+        selectedComponent.projectVersion,
+        selectedComponent.nodeId
+      );
+
+      if (cancelled) return;
+
+      const oldMap = new Map<string, any>();
+      oldProperties?.forEach(item => {
+        oldMap.set(item.propertyName, item.propertyValue);
+      });
+
+      properties.forEach(config => {
+        data[config.id] = oldMap.has(config.id)
+          ? oldMap.get(config.id)
+          : config.defaultValue;
+      });
+
+      setFormData(data);
+
+      const fieldMap: Record<string, any> = {};
+      properties.forEach(c => (fieldMap[c.id] = c));
+      setFiledProperties(fieldMap);
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedComponent]);
 
   // 2. 字段值本地更新函数 (用于受控组件)
   const handleLocalValueChange = useCallback((fieldName) => (newValue) => {
@@ -68,31 +76,48 @@ const PropertyArea : React.FC<PropertyProb> = ({setCollapsed}) => {
       ...prevData,
       [fieldName]: newValue,
     }));
-        selectedComponent.properties[fieldName] = newValue
-    editComponentProperty(fieldName, newValue);
+
   }, []);
   
   // 3. 核心逻辑：单个字段的更新处理函数（模拟提交）
-  const handleFieldUpdate = useCallback(async (fieldName, newValue) => {
+  const handleFieldUpdate = useCallback(async (currentComponent, fieldName, newValue) => {
     // 乐观更新：先更新本地 state，提高用户体验
     // 注意：这里的 setFormData 已经在 RenderControl 中通过 onValueChange 提前执行了，
     // 但为了确保万一，或者处理 API 失败时的回滚，这里可以再次确认或进行专门处理。
     
     const config = filedProperties?.[fieldName];
-    if(undefined === config){
+    if(!config){
       return;
     }
-    selectedComponent.properties[config.id] = newValue
-    editComponentProperty(config.id, newValue);
-    // 调用 API 提交数据
-    message.loading({ content: `${config?.name ?? fieldName} 正在保存...`, key: fieldName });
-    try {
-       message.success({ content: `${config?.name ?? fieldName} 保存成功！`, key: fieldName, duration: 2 });
 
-    } catch (error) {
-        message.error({ content: `${config?.name ?? fieldName} 保存出错！`, key: fieldName, duration: 2 });
+    if(selectedComponent.projectId!== currentComponent.projectId ||
+      selectedComponent.projectVersion!==currentComponent.projectVersion ||
+      selectedComponent.nodeId!== currentComponent.nodeId){
+      return;
     }
-  }, [selectedComponent]);
+
+    const oldValue = formData[fieldName]
+    if(oldValue === newValue){
+      return;
+    }
+
+    const udpateData:Record<string, string> = {}
+    udpateData[fieldName] = newValue;
+    const isok = await updateProperties(selectedComponent.projectId,
+       selectedComponent.projectVersion,
+        selectedComponent.nodeId,
+         udpateData)
+    if(isok){
+      message.success({ content: `${config?.name ?? fieldName} 保存成功！`, key: fieldName, duration: 2 });
+      const newFromData = {
+      ...formData,
+      [fieldName]: newValue,
+      }
+      setFormData(newFromData)
+    }else{
+       message.error({ content: `${config?.name ?? fieldName} 保存出错！`, key: fieldName, duration: 2 });
+    }
+  }, [selectedComponent, formData, filedProperties]);
       
   const handleOnCollapsed = () =>{
     setCollapsed(!isRightCollapsed)
@@ -113,24 +138,33 @@ const PropertyArea : React.FC<PropertyProb> = ({setCollapsed}) => {
         style={{ maxWidth: 600 , marginTop: "36px" }}
       >
         {/* 遍历配置数据，动态渲染 Form.Item */}
-        {Object.entries(selectedComponent.componentType?.propertes??[]).map(([id, config]) => (
-          <Form.Item
-            key={config.id}
-            label={config.name} // 标题 (Title)
-            // ⚠️ 注意：这里不使用 name 属性，因为我们手动管理值
-            rules={[{ required: true, message: `请${config.type === 'select' ? '选择' : '输入'}${config.name}` }]}
-            // 校验触发器：Select 用 change, Input 用 blur
-            validateTrigger={config.type === 'select' || config.type === 'text' ? 'onChange' : 'onBlur'} 
-          >
-            <InputRenderControl
-              fieldName={config.id}
-              config={config}
-              value={formData[config.id]}
-              onValueChange={handleLocalValueChange(config.id)} // 局部状态更新
-              onUpdate={handleFieldUpdate} // 提交事件
-            />
-          </Form.Item>
-        ))}
+        {(selectedComponent.componentType?.propertes ?? []).map((config) => (
+            <Form.Item
+              key={config.id}
+              label={config.name}
+              rules={[
+                {
+                  required: true,
+                  message: `请${config.type === 'select' ? '选择' : '输入'}${config.name}`,
+                },
+              ]}
+              validateTrigger={
+                config.type === 'select' || config.type === 'text'
+                  ? 'onChange'
+                  : 'onBlur'
+              }
+            >
+              <InputRenderControl
+                component={selectedComponent}
+                fieldName={config.id}
+                config={config}
+                value={formData[config.id]}
+                onValueChange={handleLocalValueChange(config.id)}
+                onUpdate={handleFieldUpdate}
+              />
+            </Form.Item>
+          ))}
+
       </Form>
     </div>
    

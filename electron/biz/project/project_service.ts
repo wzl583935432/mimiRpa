@@ -287,6 +287,17 @@ export class ProjectService{
         return projectList;
     }
 
+    public getPageList(projectId:string, projectVersion:string):Record<string, string>
+    {
+        let workflowBiz = this.workflowBizMap.get(`${projectId}_${projectVersion}`);
+        if (!workflowBiz) {
+            workflowBiz = new WorkflowBiz(projectId, projectVersion);
+            workflowBiz.init();
+            this.workflowBizMap.set(`${projectId}_${projectVersion}`, workflowBiz);
+        }
+        return workflowBiz.getGraphList();
+    }
+
     private getProjectVersionMainGraph(projectId:string, projectVersion:string):WorkflowGraphEntity{
         let workflowBiz = this.workflowBizMap.get(`${projectId}_${projectVersion}`);
         if (!workflowBiz) {
@@ -315,21 +326,47 @@ export class ProjectService{
             workflowBiz.init();
             this.workflowBizMap.set(`${projectId}_${projectVersion}`, workflowBiz);
         }
-        const workflowGraphEntity = workflowBiz.getWorkflowGraphByNodeId(nodeId || "main");
+        const workflowGraphEntity = workflowBiz.getWorkflowGraphById(nodeId || "main");
 
         return workflowGraphEntity;
     }
 
-    public saveProjectGraphData(projectId:string, projectVersion:string, nodeId:string, data:string):boolean{   
+    public saveProjectGraphData(projectId:string, projectVersion:string, graphId:string, data:string):boolean{   
+        console.log('开始保存')
         let workflowBiz = this.workflowBizMap.get(`${projectId}_${projectVersion}`);
         if (!workflowBiz) {
             workflowBiz = new WorkflowBiz(projectId, projectVersion);
             workflowBiz.init();
             this.workflowBizMap.set(`${projectId}_${projectVersion}`, workflowBiz);
         }
-        workflowBiz.saveContentByNodeId(nodeId, data);
+
+        workflowBiz.saveContentById(graphId, data);
         return true;    
     }
-       
+    
+    public saveNodeProperties(projectId:string, 
+        projectVersion:string, 
+        nodeId:string,
+        properties:Record<string,string>):boolean{
+        let workflowBiz = this.workflowBizMap.get(`${projectId}_${projectVersion}`);
+        if (!workflowBiz) {
+            workflowBiz = new WorkflowBiz(projectId, projectVersion);
+            workflowBiz.init();
+            this.workflowBizMap.set(`${projectId}_${projectVersion}`, workflowBiz);
+        }
+        workflowBiz.saveProperties(nodeId, properties);
+        return true
+    }
+     public getNodeProperties(projectId:string, 
+        projectVersion:string, 
+        nodeId:string):Array<NodePropertyEntity>{
+        let workflowBiz = this.workflowBizMap.get(`${projectId}_${projectVersion}`);
+        if (!workflowBiz) {
+            workflowBiz = new WorkflowBiz(projectId, projectVersion);
+            workflowBiz.init();
+            this.workflowBizMap.set(`${projectId}_${projectVersion}`, workflowBiz);
+        }
+        return workflowBiz.getPropertiesById(nodeId);
+    }
         
 }

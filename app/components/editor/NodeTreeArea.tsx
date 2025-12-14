@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import { Tree, TreeProps } from 'antd';
 import type { TreeDataNode } from 'antd';
 import { CarryOutOutlined } from '@ant-design/icons';
-import { EditorService } from '@/app/biz/editor_service';
+import { ComponentService } from '@/app/biz/component_service';
 import NodeDO from '@/lib/Model/Editor/NodeDO';
 
 
@@ -39,7 +39,7 @@ export const NodeTreeArea : React.FC<NodeTreeProb> =  ({setCollapsed})=> {
 
   useEffect(() => {
     const fetchTreeData = async () => {
-      const data = await EditorService.getInstance().queryNodeTreeData() as NodeDO[];
+      const data = await ComponentService.getInstance().queryNodeTreeData() as NodeDO[];
       const treeDataNodes = NodeDoToTreeDataNode(data)
       setTreeData(treeDataNodes);
     }; 

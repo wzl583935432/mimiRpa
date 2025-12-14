@@ -1,5 +1,4 @@
 import { useEffect, useRef , useState, useCallback} from "react";
-import {WorkflowEditorBiz} from "@/app/biz/workflow_editor_biz"
 import CanvasArea from "./CanvasArea"
 import './WorkflowEditor.css'
 
@@ -22,7 +21,6 @@ interface WorkflowGraphEditor{
 }
 
 const WorkflowEditor: React.FC<WorkflowEditorProb> = ({projectId, version}) => {
-    const workflowEditorBiz = new WorkflowEditorBiz(projectId, version)
     const [editors,setEditors] = useState<WorkflowGraphEditor[]>([]);
     const [activeTabId, setActiveTabId] = useState("");
     const canvasRefs = useRef<Map<string, CCanvasRefHandle>>(new Map());
@@ -43,27 +41,25 @@ const WorkflowEditor: React.FC<WorkflowEditorProb> = ({projectId, version}) => {
       }, []);
 
     useEffect(()=>{
-        const load = async () => {
-        const data = await workflowEditorBiz.getProjectMainGraph();
-
-        const handleRef = (instance: CCanvasRefHandle | null) => {
-          if (instance) {
-            canvasRefs.current.set("main", instance);
-          }
-        };
-        const  mainGraph: WorkflowGraphEditor = {
-          id:"main",
-          title:"首页",
-          content:<CanvasArea data = {data}  ref={handleRef} // ⚠️ 使用 Ref 访问 C
-                onDataSaved={handleCResult}></CanvasArea>
+      const load = async () => {
+      const handleRef = (instance: CCanvasRefHandle | null) => {
+        if (instance) {
+          canvasRefs.current.set("main", instance);
         }
-        const newEditots = [mainGraph]
-        setActiveTabId('main')
-        setEditors(newEditots)
-  };
+      };
+      const  mainGraph: WorkflowGraphEditor = {
+        id:"main",
+        title:"首页",
+        content:<CanvasArea graphId="main" projectId={projectId} version={version}  ref={handleRef} // ⚠️ 使用 Ref 访问 C
+              onDataSaved={handleCResult}></CanvasArea>
+      }
+      const newEditots = [mainGraph]
+      setActiveTabId('main')
+      setEditors(newEditots)
+      };
 
-  load();
-    },[]);
+      load();
+    },[projectId, version]);
   // 渲染 Tab 标题/导航区域
   const renderTabHeaders = () => (
     <div className="tab-headers">

@@ -1,99 +1,110 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Input, Select, Button } from 'antd';
-
 import { AimOutlined } from '@ant-design/icons';
 import SelectElement from './SelectElement';
-/**
- * 核心渲染函数：根据配置对象的 type 字段渲染 antd 输入组件，并处理事件
- * * @param {string} fieldName - 字段名称（key）
- * @param {object} config - 字段配置（包含 type, options, placeholder 等）
- * @param {any} value - 当前字段的值
- * @param {function} onValueChange - 更新本地状态的函数 (newValue => void)
- * @param {function} onUpdate - 触发字段提交/更新的函数 (fieldName, newValue => Promise)
- */
-export const InputRenderControl = ({ fieldName, config, value, onValueChange, onUpdate }) => {
-  const { inputType, options, placeholder, rows } = config;
+
+interface InputRenderControlProps {
+  component: any;
+  fieldName: string;
+  config: {
+    inputType: string;
+    options?: any[];
+    placeholder?: string;
+    rows?: number;
+    name?: string;
+  };
+  value: any;
+  onValueChange?: (val: any) => void; // 可选：仅用于父组件同步显示
+  onUpdate: (component: any, field: string, val: any) => void;
+}
+
+export const InputRenderControl: React.FC<InputRenderControlProps> = ({
+  component,
+  fieldName,
+  config,
+  value,
+  onValueChange,
+  onUpdate,
+}) => {
+  const { inputType, options, placeholder, rows, name } = config;
+
+  const [itemValue, setItemValue] = useState<any>(value);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const [itemValue, setItemValue] = useState(value);
-  // 所有文本输入的 onChange，用于更新本地 state
-  const handleTextChange = useCallback((e) => {
-      onValueChange(e.target.value);
+  /** 外部 value 变化 → 同步本地（如切换节点） */
+  useEffect(() => {
+    setItemValue(value);
+  }, [value]);
+
+  /** 文本输入 */
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setItemValue(val);
+    onValueChange?.(val);
   }, [onValueChange]);
 
-  // 统一的文本输入框失去焦点处理函数 (Input/TextArea)
-  const handleBlur = useCallback((e) => {
-    const finalValue = e.target.value;
-    // 只有当值与当前 state 值不同时才触发提交
-    if (finalValue !== value) {
-        onUpdate(fieldName, finalValue);
+  /** 失焦提交 */
+  const handleBlur = useCallback(() => {
+    if (itemValue !== value) {
+      onUpdate(component, fieldName, itemValue);
     }
-  }, [fieldName, onUpdate, value]);
+  }, [component, fieldName, itemValue, value, onUpdate]);
 
-  // Select 的值改变处理函数 (Select 通常用 onChange 即时提交)
-  const handleSelectChange = useCallback((newValue) => {
-    onValueChange(newValue); // 先更新本地状态
-    onUpdate(fieldName, newValue); // 立即触发提交/更新
-  }, [fieldName, onUpdate, onValueChange]);
+  /** Select 直接提交 */
+  const handleSelectChange = useCallback((val: any) => {
+    setItemValue(val);
+    onValueChange?.(val);
+    onUpdate(component, fieldName, val);
+  }, [component, fieldName, onUpdate, onValueChange]);
 
-const handleOpenDialog = () => {
-    setIsDialogOpen(true);
-  };
-
-  // 处理对话框关闭和结果返回的回调函数
-  const handleCloseDialog = (result) => {
+  /** Dialog */
+  const handleCloseDialog = useCallback((result?: any) => {
     setIsDialogOpen(false);
-    if (result) {
-
-      if (result !== value) {
-        onUpdate(fieldName, result);
-      }
-      // 接收到结果，更新当前界面的状态
+    if (result !== undefined && result !== itemValue) {
       setItemValue(result);
+      onUpdate(component, fieldName, result);
     }
-  };
+  }, [component, fieldName, itemValue, onUpdate]);
 
   switch (inputType) {
     case 'text':
       return (
-        <Input 
-          value={itemValue} 
+        <Input
+          value={itemValue}
           onChange={handleTextChange}
-          onBlur={handleBlur} // 失去焦点时触发提交
-          placeholder={placeholder || `请输入${config.name}`}
+          onBlur={handleBlur}
+          placeholder={placeholder || `请输入${name ?? ''}`}
         />
       );
-      
+
     case 'textarea':
       return (
-        <Input.TextArea 
-          value={itemValue} 
+        <Input.TextArea
+          value={itemValue}
           onChange={handleTextChange}
-          onBlur={handleBlur} // 失去焦点时触发提交
-          rows={rows || 2}
-          placeholder={placeholder || `请输入${config.name}`}
+          onBlur={handleBlur}
+          rows={rows ?? 2}
+          placeholder={placeholder || `请输入${name ?? ''}`}
         />
       );
 
     case 'select':
       return (
-        <Select 
+        <Select
           value={itemValue}
-          onChange={handleSelectChange} // 值改变时触发提交
-          placeholder={placeholder || `请选择${config.name}`}
-          options={options} 
+          options={options}
+          onChange={handleSelectChange}
+          placeholder={placeholder || `请选择${name ?? ''}`}
         />
       );
 
     case 'targetElement':
       return (
-        <div style={{ padding: '20px' }}>
-           <Button 
-            type="primary" 
-            // ✅ 正确的使用：AimOutlined
-            icon={<AimOutlined />} 
-            size="large" 
-            onClick={handleOpenDialog}
+        <>
+          <Button
+            type="primary"
+            icon={<AimOutlined />}
+            onClick={() => setIsDialogOpen(true)}
           >
             编辑目标
           </Button>
@@ -104,13 +115,10 @@ const handleOpenDialog = () => {
               onClose={handleCloseDialog}
             />
           )}
-
-        </div>
-       
+        </>
       );
 
     default:
-      return <Input disabled value={`不支持的配置类型: ${inputType}`} />;
+      return <Input disabled value={`不支持的类型: ${inputType}`} />;
   }
 };
-

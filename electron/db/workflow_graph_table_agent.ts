@@ -18,32 +18,41 @@ export class WorkflowGraphTableAgent{
             name TEXT NOT NULL,
             description TEXT,
             content TEXT,
-            nodeId TEXT,
-            parentGraphId TEXT,
             createTime INTEGER NOT NULL,
             createUser TEXT NOT NULL,
             lastEditTime INTEGER NOT NULL
         );
         `;
         this.db?.exec(createTableSQL);
-        const createIndexSql = `
-                CREATE INDEX IF NOT EXISTS idx_workflow_graph_nodeId 
-                ON workflow_graph (nodeId);
-            `;
-
-        this.db?.exec(createIndexSql);
     }
 
-    getWorkflowGraphByNodeId(nodeId: string): WorkflowGraphEntity | null {
+    getWorkflowGraphById(nodeId: string): WorkflowGraphEntity | null {
         if (!this.db) {
             throw new Error("Database not initialized.");
         }   
-        const stmt = this.db.prepare('SELECT * FROM workflow_graph WHERE nodeId = ?');
+        const stmt = this.db.prepare('SELECT * FROM workflow_graph WHERE id = ?');
         const row = stmt.get(nodeId);
         if (row) {
             return this.mapToWorkflowGraphEntity(row);
         }
         return null;
+    }
+
+    getWorkflowGraphList(): Record<string,string> {
+        if (!this.db) {
+            throw new Error("Database not initialized.");
+        }   
+        const stmt = this.db.prepare('SELECT * FROM workflow_graph');
+        const rows:any[]= stmt.all()
+        const result = {}
+        if(!rows){
+            return result;
+        }
+        for (let index = 0; index < rows.length; index++) {
+            const element = rows[index];
+            result [element.id] = element.name;
+        }
+        return result;
     }
 
     mapToWorkflowGraphEntity(row: any): WorkflowGraphEntity {
@@ -52,24 +61,22 @@ export class WorkflowGraphTableAgent{
             row.name,
             row.description,
             row.content,
-            row.nodeId,
-            row.parentGraphId,
             row.createTime,
             row.createUser,
             row.lastEditTime
         );
     }
 
-    deleteWorkflowGraphByNodeId(nodeId: string): boolean {
+    deleteWorkflowGraphById(nodeId: string): boolean {
         if (!this.db) {
             throw new Error("Database not initialized.");
         }
-        const stmt = this.db.prepare('DELETE FROM workflow_graph WHERE nodeId = ?');
+        const stmt = this.db.prepare('DELETE FROM workflow_graph WHERE id = ?');
         const info = stmt.run(nodeId);
         return info.changes > 0;
     }
 
-    saveContentByNodeId(nodeId: string, content: string): boolean {
+    saveContentById(id: string, content: string): boolean {
         if (!this.db) {
             throw new Error("Database not initialized.");
         }
@@ -78,12 +85,12 @@ export class WorkflowGraphTableAgent{
         UPDATE workflow_graph SET
             content = ?,
             lastEditTime = ?
-        WHERE nodeId = ?
+        WHERE id = ?
         `);
         const info = stmt.run(
             content,
             timestamp_ms,
-            nodeId
+            id
         );
         return info.changes > 0;
     }
@@ -93,40 +100,36 @@ export class WorkflowGraphTableAgent{
         if (!this.db) {
             throw new Error("Database not initialized.");
         }
-
-        const existingEntity = this.getWorkflowGraphByNodeId(entity.nodeId);
+        console.log("saveOrUpdateWorkflowGraph")
+        const existingEntity = this.getWorkflowGraphById(entity.id);
         if (existingEntity) {
             const stmt = this.db.prepare(`
             UPDATE workflow_graph SET
                 name = ?,
                 description = ?,
                 content = ?,
-                parentGraphId = ?,
                 lastEditTime = ?
-            WHERE nodeId = ?
+            WHERE id = ?
             `);
             const info = stmt.run(
                 entity.name,
                 entity.description,
                 entity.content,
-                entity.parentGraphId,
                 entity.lastEditTime,
-                entity.nodeId
+                entity.id
             );
             return info.changes > 0;
         }
 
         const stmt = this.db.prepare(`
-        INSERT INTO workflow_graph (id, name, description, content, nodeId, parentGraphId, createTime, createUser, lastEditTime)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO workflow_graph (id, name, description, content, createTime, createUser, lastEditTime)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         `);
         const info = stmt.run(
             entity.id,
             entity.name,
             entity.description,
             entity.content,
-            entity.nodeId,
-            entity.parentGraphId,
             entity.createTime,
             entity.createUser,
             entity.lastEditTime

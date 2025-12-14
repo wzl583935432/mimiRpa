@@ -1,46 +1,48 @@
 import ComponentTypeDO from '@/lib/Model/Editor/ComponentTypeDO';
 import { create } from 'zustand';
 
-export interface SelectedComponent
+export enum SelectType{
+    Node,
+    Line,
+    Graph
+}
+
+export interface SelectedNode
 {
     projectId: string;
-    componentId: string;
+    projectVersion: string;
+    selectType: SelectType;
+    nodeId: string;
     componentTypeId: string;
+    alias:string,
     componentType:ComponentTypeDO|null;
-    properties:  Record<string, any>;
 }
 
-export interface SelectedComponentState {
-    selectedComponent: SelectedComponent; // 选中的组件
-    setSelectedComponent: (item: SelectedComponent) => void; // 设置选中的组件
-    editComponentProperty: (key: string, value: any) => void; // 编辑组件属性
+export interface SelectedNodeState {
+    selectedValue: SelectedNode; // 选中的组件
+    setSelectedNode: (item: SelectedNode) => void; // 设置选中的组件
 }
 
 
-export const useSelectedComponentStore = create<SelectedComponentState>((set) => ({
-    selectedComponent: {
+export const useSelectedNodeStore = create<SelectedNodeState>((set) => ({
+    selectedValue: {
         projectId: '',
-        componentId: '',
+        projectVersion:'',
+        selectType:SelectType.Node,
+        nodeId: '',
+        alias:'',
         componentTypeId: '',
-        properties: {},
         componentType: null,
     },
-    setSelectedComponent: (item: SelectedComponent) => set(() => ({
-        selectedComponent: {
+    setSelectedNode: (item: SelectedNode) => set(() => ({
+        selectedValue: {
             projectId: item.projectId,
-            componentId: item.componentId,
+            projectVersion:item.projectVersion,
+            selectType:item.selectType,
+            nodeId: item.nodeId,
+            alias:item.alias,
             componentType: item.componentType,
             componentTypeId: item.componentTypeId,
-            properties: item.properties,
-        }
-    })),
-    editComponentProperty: (key: string, value: any) => set((state) => ({
-        selectedComponent: {
-            ...state.selectedComponent,
-            properties: {
-                ...state.selectedComponent.properties,
-                [key]: value,
-            },
         }
     })),
 }));

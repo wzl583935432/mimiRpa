@@ -25,8 +25,13 @@ export const useProjectEditorStore = create<ProjectEditorState>((set) => ({
 
   // 增加商品到购物车
   addEditorProject: (item, version) => set((state) => {
-    if (state.projectEditorItems.find(i => i.data.id === item.id && i.version === version)) {
-      return state; // 如果项目已存在，直接返回当前状态
+    const exsitProject =  state.projectEditorItems.find(i => i.data.id === item.id && i.version === version)
+    if (exsitProject) {
+      const projectEditorItems = [...state.projectEditorItems];
+      return { 
+        newItemId:exsitProject.id,
+        projectEditorItems: projectEditorItems,
+      };
     }
     const editorItem = {
       id:uuidv4(),

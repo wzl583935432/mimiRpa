@@ -10,6 +10,7 @@ export class NodePropertyTableAgent {
         if (!this.db) {
             throw new Error("Database not initialized.");
         }   
+        console.log('NodePropertyTableAgent init1')
         const createTableSQL = `
         CREATE TABLE IF NOT EXISTS node_property (
             id TEXT PRIMARY KEY,
@@ -24,6 +25,7 @@ export class NodePropertyTableAgent {
         `;
         this.db?.exec(createTableSQL);
 
+        console.log('NodePropertyTableAgent init2')
         const createIndexSql = `
             CREATE INDEX IF NOT EXISTS idx_node_property_nodeId 
             ON node_property (nodeId);
@@ -80,7 +82,7 @@ export class NodePropertyTableAgent {
             const info = stmt.run(
                 nodeProperty.propertyValue,
                 nodeProperty.lastEditTime,
-                nodeProperty.isDefault ? 1 : 0,
+                0,
                 existingProperty.id
             );
             return info.changes > 0;
@@ -98,7 +100,7 @@ export class NodePropertyTableAgent {
                 nodeProperty.createTime,
                 nodeProperty.createUser,
                 nodeProperty.lastEditTime,
-                nodeProperty.isDefault ? 1 : 0
+                1
             );
             return info.changes > 0;
         }

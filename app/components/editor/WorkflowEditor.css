@@ -10,7 +10,7 @@
 /* --- 标签头区域 --- */
 .tab-headers {
   display: flex;
-  background-color: #e8e8e8; /* 标签栏背景色 */
+  background-color: #ffffff; /* 标签栏背景色 */
   height: 36px;
   border-bottom: 1px solid #c9c9c9; /* 底部细线分隔 */
   padding: 0 10px; /* 左右内边距 */

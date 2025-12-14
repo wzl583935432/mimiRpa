@@ -22,12 +22,21 @@ const MainTab = () => {
   const newEditId  = useProjectEditorStore(((state) =>state.newItemId))
   const [tabData, setTabData] = useState(initialTabData);
   const  projectEditorItems  = useProjectEditorStore(((state) => state.projectEditorItems));
+  const closeEditorProject =  useProjectEditorStore(((state) => state.closeEditorProject));
 
   // 1. 使用 useState 追踪当前激活的 Tab ID，默认为第一个标签的 ID
   const [activeTabId, setActiveTabId] = useState(tabData[0].id);
 
   const handleClose = (id:string) =>{
-
+    let befid = "home";
+    for(const item of projectEditorItems){
+      if(id === item.id){
+        break;
+      }
+      befid = item.id;
+    }
+    closeEditorProject(id)
+    setActiveTabId(befid)
   }
   const handleEditorExecute = () =>{
 
@@ -58,6 +67,7 @@ const MainTab = () => {
     };
     fetchProjects();
     }, [projectEditorItems, newEditId]);
+
 
   
   // 渲染 Tab 标题/导航区域
@@ -106,13 +116,19 @@ const MainTab = () => {
 
   // 渲染 Tab 内容区域
   const renderTabContent = () => {
-    // 找到当前激活的 Tab 对象
-    const activeTabItem = tabData.find(tab => tab.id === activeTabId);
-
-    // 只渲染匹配的内容
-    return (
-      <div className="tab-content">
-        {activeTabItem ? activeTabItem.content : <p>内容加载失败。</p>}
+  return (
+   <div className="tab-content">
+       {tabData.map(tab => (
+         <div
+            key={tab.id}
+            // 使用 style.display 控制显示和隐藏
+            style={{ display: tab.id === activeTabId ? 'block' : 'none' }}
+            // 或者使用 className/CSS 
+            // className={`tab-pane ${tab.id === activeTabId ? 'active' : ''}`}
+          >
+            {tab.content}
+          </div>
+        ))}
       </div>
     );
   };

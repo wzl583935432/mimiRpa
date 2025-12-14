@@ -37,10 +37,12 @@ import fs from "fs";
             fs.mkdirSync( project_workflow_dir, { recursive: true });
         }
         const version_workflow_db_file = path.join(project_workflow_dir, `${this.projectVersion}.db`);
+        console.log("数据库路径：", version_workflow_db_file)
         this.db = new Database(version_workflow_db_file);
         this.isInitialized = true;
         this.workflowGraphTableAgent = new WorkflowGraphTableAgent(this.db);
         this.workflowGraphTableAgent.init();
+        console.log('NodePropertyTableAgent')
         this.NodePropertyTableAgent = new NodePropertyTableAgent(this.db);
         this.NodePropertyTableAgent.init();
 
@@ -48,11 +50,11 @@ import fs from "fs";
         // 初始化工作流相关的数据库连接等操作
     }
 
-    public getMainEditorGraph():WorkflowGraphEntity{
+    public createMainEdtorGraph():WorkflowGraphEntity{
         if(!this.db){
             throw new Error("Database not initialized.");
         }
-        const workflow_graph_entity =  this.workflowGraphTableAgent?.getWorkflowGraphByNodeId("main");
+        const workflow_graph_entity =  this.workflowGraphTableAgent?.getWorkflowGraphById("main");
         if(workflow_graph_entity){
             return workflow_graph_entity;
         }
@@ -61,8 +63,6 @@ import fs from "fs";
         "main",
         "主流程",
         "{}",
-        "main",
-        "",
         Date.now(),
         createUser ,
         Date.now());
@@ -70,20 +70,39 @@ import fs from "fs";
         return newMainGraph;
     }
 
-    public createNewWorkflowGraph(name:string, 
-        description:string, 
-        nodeId:string, 
-        parentGraphId:string):WorkflowGraphEntity{
+    public getMainEditorGraph():WorkflowGraphEntity{
         if(!this.db){
             throw new Error("Database not initialized.");
         }
+        const workflow_graph_entity =  this.workflowGraphTableAgent?.getWorkflowGraphById("main");
+        if(workflow_graph_entity){
+            return workflow_graph_entity;
+        }
+        return this.createMainEdtorGraph()
+    }
+
+    public getGraphList():Record<string, string>{
+        if(!this.db){
+            throw new Error("Database not initialized.");
+        }
+        if(!this.workflowGraphTableAgent){
+            throw new Error("database agent not initilized");
+        }
+        return this.workflowGraphTableAgent.getWorkflowGraphList();
+    }
+
+
+    public createNewWorkflowGraph(name:string, 
+        description:string):WorkflowGraphEntity{
+        if(!this.db){
+            throw new Error("Database not initialized.");
+        }
+  
         const createUser = UserService.getInstance().getCurrentUserId();
         const newGraph = new WorkflowGraphEntity(uuidv4(),
         name,
         description,
         "{}",
-        nodeId,
-        parentGraphId,
         Date.now(),
         createUser ,
         Date.now());
@@ -92,19 +111,66 @@ import fs from "fs";
     }
 
 
-    public getWorkflowGraphByNodeId(nodeId:string):WorkflowGraphEntity | null{
-        const workflow_graph_entity =  this.workflowGraphTableAgent?.getWorkflowGraphByNodeId(nodeId);
+    public getWorkflowGraphById(graphId:string):WorkflowGraphEntity | null{
+        const workflow_graph_entity =  this.workflowGraphTableAgent?.getWorkflowGraphById(graphId);
         if(workflow_graph_entity){
             return workflow_graph_entity;
         }
         return null;
     }
 
-    public saveContentByNodeId(nodeId:string, content:string):boolean{
-        return this.workflowGraphTableAgent?.saveContentByNodeId(nodeId, content) || false;
+    public saveContentById(id:string, content:string):boolean{
+        console.log('保存的数据', content)
+        const isok = this.workflowGraphTableAgent?.saveContentById(id, content) || false;
+        if (!isok){
+            const createUser = UserService.getInstance().getCurrentUserId();
+            const entity: WorkflowGraphEntity = 
+            new WorkflowGraphEntity(id,
+                id === 'main'?'main':'重建',
+                id === 'main'?'主流程':'',
+                content, Date.now(), createUser ,
+                Date.now()) ;
+            console.log('重建的数据-----', this.workflowGraphTableAgent)
+            return  this.workflowGraphTableAgent?.saveOrUpdateWorkflowGraph(entity)|| false;
+        }
+        console.log('保存的数据-----', isok)
+        return isok;
+       
     }
 
-    public getPropertiesByNodeId(nodeId:string):Array<NodePropertyEntity>{
+
+
+    public saveOrUpdateNodeProperty(entity:NodePropertyEntity):boolean{
+        if(!entity.id){
+            entity.id = uuidv4();
+        }
+        return this.NodePropertyTableAgent?.insertOrUpdateNodeProperty(entity) || false;
+    }
+
+    public removeNodeByNodeId(graphId:string):boolean{
+        const deleteGraphResult = this.workflowGraphTableAgent?.deleteWorkflowGraphById(graphId) || false;
+        const deletePropertiesResult = this.NodePropertyTableAgent?.deleteNodePropertiesByNodeId(graphId) || false;
+        return deleteGraphResult && deletePropertiesResult;
+    }
+
+    public saveProperties(nodeId:string, properties:Record<string,string>):boolean{
+        const createUser = UserService.getInstance().getCurrentUserId();
+        for (const [key, value] of Object.entries(properties)) {
+           const entitiy: NodePropertyEntity  = new NodePropertyEntity(uuidv4(),
+            nodeId,
+            key,
+            value,
+            Date.now(),
+            createUser ,
+            Date.now(),
+            true
+           );
+           this.NodePropertyTableAgent?.insertOrUpdateNodeProperty(entitiy);
+        }
+        return true
+    }
+
+    public getPropertiesById(nodeId:string):Array<NodePropertyEntity>{
         if(!this.db){
             throw new Error("Database not initialized.");
         }
@@ -115,20 +181,6 @@ import fs from "fs";
         // TODO 调用 NodePropertyAgent 获取节点属性
         return [];
     }
-
-    public saveOrUpdateNodeProperty(entity:NodePropertyEntity):boolean{
-        if(!entity.id){
-            entity.id = uuidv4();
-        }
-        return this.NodePropertyTableAgent?.insertOrUpdateNodeProperty(entity) || false;
-    }
-
-    public removeNodeByNodeId(nodeId:string):boolean{
-        const deleteGraphResult = this.workflowGraphTableAgent?.deleteWorkflowGraphByNodeId(nodeId) || false;
-        const deletePropertiesResult = this.NodePropertyTableAgent?.deleteNodePropertiesByNodeId(nodeId) || false;
-        return deleteGraphResult && deletePropertiesResult;
-    }
-
 
 
     

@@ -25,6 +25,10 @@ export const projectIpcSchema = {
     args: z.tuple([z.string()]), // projectId
     return: z.any(),
   },
+  'query_graph_list': {
+    args:z.tuple([z.string(), z.string()]),
+    return: z.record(z.string(), z.string()),
+  },
   'project_delete_version': {
     args: z.tuple([z.string(), z.string()]), // projectId, projectVersion
     return: z.any(),
@@ -34,11 +38,19 @@ export const projectIpcSchema = {
     return: z.any(),
   },
   'project_query_graph_data': {
-    args: z.tuple([z.string(), z.string(), z.string().optional()]), // projectId, projectVersion, nodeId
+    args: z.tuple([z.string(), z.string(), z.string()]), // projectId, projectVersion, graphId
     return: z.any(),
   },
   'project_save_graph_data': {
     args: z.tuple([z.string(), z.string(), z.string(), z.string()]), // projectId, projectVersion, nodeId, data
     return: z.any(),
   },
+  'save_node_properties':{
+    args: z.tuple([z.string(), z.string(), z.string(), z.record(z.string(),z.string())]), // projectId, projectVersion, nodeId, data
+    return: z.boolean(),
+  },
+  'query_node_properties':{
+    args: z.tuple([z.string(), z.string(), z.string()]), 
+    return: z.array(z.any())
+  }
 }

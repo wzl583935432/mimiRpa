@@ -6,13 +6,17 @@ import { v4 as uuidv4 } from 'uuid'
 
 import './Editor.css';
 import ComponentCard from './ComponentCard';
-import { EditorService } from '@/app/biz/editor_service';
+import { ComponentService } from '@/app/biz/component_service';
 import ComponentTypeDO from '@/lib/Model/Editor/ComponentTypeDO';
-import { useSelectedComponentStore } from '@/app/components/store/EditorStore';
+import { useSelectedNodeStore, SelectedNode, SelectType } from '@/app/components/store/EditorStore';
+import {WorkflowEditorBiz} from "@/app/biz/workflow_editor_biz"
+
 
 
 interface CanvasProps {
-    data:string;
+    projectId:string;
+    version:string;
+    graphId:string,
     onDataSaved: (status: string) => void;
 }
 
@@ -22,44 +26,16 @@ interface CRefHandle {
     getCurrentData: () => string;
 }
 
-const CanvasArea = forwardRef<CRefHandle, CanvasProps>(({ onDataSaved }, ref) => {
-  const selectedComponent = useSelectedComponentStore((state) => state.selectedComponent);
-  const setSelectedComponent = useSelectedComponentStore((state) => state.setSelectedComponent);
+const CanvasArea = forwardRef<CRefHandle, CanvasProps>(({ graphId, projectId, version, onDataSaved }, ref) => {
+  const workflowEditorBiz = new WorkflowEditorBiz(projectId, version)
+  const selectedComponent = useSelectedNodeStore((state) => state.selectedValue);
+  const setSelectedComponent = useSelectedNodeStore((state) => state.setSelectedNode);
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<Graph | null>(null);
   const [componentTypes, setComponentTypes] = useState<Record<string, ComponentTypeDO>>({});
   const componentTypesRef = useRef<Record<string, ComponentTypeDO>>({});
 
-  useEffect(() => {
-    const graph = graphRef.current
-    if (!graph) return
 
-    let spacePressed = false
-
-    const down = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !spacePressed) {
-        spacePressed = true
-        graph.enablePanning()
-        graph.container.style.cursor = 'grab'
-      }
-    }
-
-    const up = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
-        spacePressed = false
-        graph.disablePanning()
-        graph.container.style.cursor = 'default'
-      }
-    }
-
-    document.addEventListener('keydown', down)
-    document.addEventListener('keyup', up)
-
-    return () => {
-      document.removeEventListener('keydown', down)
-      document.removeEventListener('keyup', up)
-    }
-  }, [graphRef])
 
   // C 内部的保存逻辑
   const executeSave = useCallback(() => {
@@ -88,42 +64,54 @@ const CanvasArea = forwardRef<CRefHandle, CanvasProps>(({ onDataSaved }, ref) =>
 
   useEffect(() => {
     componentTypesRef.current = componentTypes;
-  }, [componentTypes]); // 依赖 componentTypes，只要它变就更新 ref
+  }, [componentTypes]); 
 
-  useEffect(()=>{
-    const graph = graphRef.current;
-    
-    // 只有当 store 中有 ID 且数据对象不为 null 时才执行回写
-    if (graph &&  selectedComponent && selectedComponent.componentId) {
-      const node = graph.getCellById(selectedComponent.componentId);
-      
-      if (node) {
-        // 使用 setData API 更新 X6 节点的数据
-        // X6 会自动触发节点的渲染更新
-        console.log(`ComponentA: 收到数据变更，更新节点 ${selectedComponent.componentId} 的数据为:`, selectedComponent);
-         const nodedata = node.getData()?.nodedata
-        if(nodedata.propertes == selectedComponent.properties){
-          return
+  const fetchComponentTypesData = async () => {
+    const data = await ComponentService.getInstance().queryComponentTypes() as Record<string, ComponentTypeDO>;
+    setComponentTypes(data);
+  }; 
+
+  const initComponentCard =()=>{
+    register({
+      shape: 'custom-react-node',
+      width: 100,
+      height: 100,
+      component: ComponentCard,
+      ports: {
+        groups: {
+          in: {
+            position: 'top',
+            attrs: {
+              circle: {
+                r: 4,
+                magnet: true,
+                stroke: '#31d0c6',
+                strokeWidth: 1,
+                fill: '#fff',
+              },
+            },
+          },
+          out: {
+            position: 'bottom',
+            attrs: {
+              circle: {
+                r: 4,
+                magnet: true,
+                stroke: '#31d0c6',
+                strokeWidth: 1,
+                fill: '#fff',
+              },
+            },
+          },
+        },
+    },
+    })
+  }
+
+  const createGraph =():Graph|null=>{
+    if (!containerRef.current) {
+          return null
         }
-       
-        nodedata.propertes = selectedComponent.properties
-        node.setData(nodedata); 
-        // 确保 X6 视图更新 (根据 X6 版本和配置可能需要)
-        //graph.trigger('node:change:data', { cell: node, current: selectedNodeData });
-      }
-    }
-  },
-   [selectedComponent])
-
-     // 初始化图形
-  useEffect(() => {
-    const fetchComponentTypesData = async () => {
-      const data = await EditorService.getInstance().queryComponentTypes() as Record<string, ComponentTypeDO>;
-      setComponentTypes(data);
-    }; 
-    fetchComponentTypesData();
-
-    if (!containerRef.current) return;
 
     // 创建图形实例
     const graph = new Graph({
@@ -190,86 +178,36 @@ const CanvasArea = forwardRef<CRefHandle, CanvasProps>(({ onDataSaved }, ref) =>
       },
     });
 
-  graph.use(
-    new Selection({
-      enabled: true,
-      multiple: false,          // 是否允许多选
-      rubberband: true,          // 是否允许拖框选
-      showNodeSelectionBox: true, // 显示节点被选中的框
-      showEdgeSelectionBox: false, // 是否对边显示选中框
-      filter:["edge","node"],   // 过滤不需要被选中的元素
-      // 你还可以设置 filter、strict 等其他选项
-    })
-  )
+    
+    graph.use(
+      new Selection({
+        enabled: true,
+        multiple: false,          // 是否允许多选
+        rubberband: true,          // 是否允许拖框选
+        showNodeSelectionBox: true, // 显示节点被选中的框
+        showEdgeSelectionBox: false, // 是否对边显示选中框
+        filter:["edge","node"],   // 过滤不需要被选中的元素
+        // 你还可以设置 filter、strict 等其他选项
+      })
+    )
 
-  register({
-    shape: 'custom-react-node',
-    width: 100,
-    height: 100,
-    component: ComponentCard,
-    ports: {
-      groups: {
-        in: {
-          position: 'top',
-          attrs: {
-            circle: {
-              r: 4,
-              magnet: true,
-              stroke: '#31d0c6',
-              strokeWidth: 1,
-              fill: '#fff',
-            },
-          },
-        },
-        out: {
-          position: 'bottom',
-          attrs: {
-            circle: {
-              r: 4,
-              magnet: true,
-              stroke: '#31d0c6',
-              strokeWidth: 1,
-              fill: '#fff',
-            },
-          },
-        },
-      },
-  },
-  })
+    
+    graph.on('node:click', ({ node }) => {
+      const currentTypes = componentTypesRef.current;    
+      const typeId = node.getData()?.nodedata.componentTypeId;
+      const alias = node.getData()?.nodedata.alias;
+      const selectComponent:SelectedNode ={
+          projectId: projectId,
+          projectVersion: version,
+          selectType:SelectType.Node,
+          nodeId: node.id,
+          alias: alias,
+          componentTypeId: typeId, 
+          // ⭐️ 现在这里访问的是最新的值
+          componentType: currentTypes[typeId] || null, 
 
-
-
- console.log("graph 添加节点");
- const node = graph.addNode({
-  shape: 'custom-react-node',
-  x: 40,
-  y: 40,
-  width: 100, height: 40,
-  data: { nodedata:{ id:uuidv4(),  originName: '初始值', color: '#409EFF' }},
-   ports: [
-        { id: `port_${uuidv4()}`, group: 'out' },
-        { id: `port_${uuidv4()}`, group: 'in' },
-      ],
-})
-console.log("graph 添加节点完成", node );
-
-  graphRef.current = graph;
-
-  graph.on('node:click', ({ node }) => {
-    const currentTypes = componentTypesRef.current;    
-    const typeId = node.getData()?.nodedata.componentTypeId;
-    const selectComponent ={
-        projectId: '',
-        componentId: node.id,
-        componentTypeId: typeId, 
-        // ⭐️ 现在这里访问的是最新的值
-        componentType: currentTypes[typeId] || null, 
-        originName: node.getData()?.nodedata.originName || '',
-        properties: node.getData()?.nodedata.propertes || {},
-        
-
-    };
-    setSelectedComponent(selectComponent);
+      };
+      setSelectedComponent(selectComponent);
 
     console.log('Node clicked:', node.id);
       })
@@ -282,6 +220,24 @@ console.log("graph 添加节点完成", node );
     graph.on('cell:selected', ({ cell }) => {
       console.log('Cell selected:', cell.id);
     });
+
+    graph.on('node:selected', ({ node }) => {
+      node.attr({
+        body: {
+          stroke: '#1677ff',
+          strokeWidth: 2,
+        },
+      })
+    })
+
+    graph.on('node:unselected', ({ node }) => {
+      node.attr({
+        body: {
+          stroke: '#d9d9d9',
+          strokeWidth: 1,
+        },
+      })
+    })
 
     // 监听取消选中事件
     graph.on('cell:unselected', () => {
@@ -297,14 +253,64 @@ console.log("graph 添加节点完成", node );
     graph.on('cell:change:size', ({ cell }) => {
       console.log('Cell size changed:', cell.id);
     });
+   
+    return graph;
+  }
+
+  const getStartNode = (graph: Graph) => {
+  return graph.getNodes().find(node => {
+    return node.getData()?.componentTypeId === 'start';
+  });
+}
+
+  const initGraph = async ()=>{
+    const graphData = await workflowEditorBiz.queryEditorGraphData(graphId);
+    if(graphRef.current)
+    {
+      return;
+    }
+    await fetchComponentTypesData();
+    initComponentCard()
+    const graph = createGraph();
+    if(null == graph){
+      return
+    }
+    try{
+      if(graphData?.content){
+        const graphJson = JSON.parse(graphData.content);
+        graph.fromJSON(graphJson)
+      }
+    }
+    catch(err){
+      console.error(err);
+    }
+
+    if(!getStartNode(graph)){
+      const node = graph.addNode({
+        shape: 'custom-react-node',
+        x: 40,
+        y: 40,
+        width: 100, height: 40,
+        data: { nodedata:{ id:uuidv4(), componentTypeId:'start',  originName: '初始值', color: '#409EFF' }},
+        ports: [
+              { id: `port_${uuidv4()}`, group: 'out' }
+            ],
+      })
+      console.log("graph 添加开始节点完成", node );
+    }
+    graphRef.current = graph;
 
 
+  }
+
+
+  // 初始化图形
+  useEffect(() => {
+    initGraph()
     return () => {
-      graph.dispose();
+      graphRef.current?.dispose();
     };
   }, []);
-
-  
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -312,7 +318,10 @@ console.log("graph 添加节点完成", node );
 
   const addNode =(componentId:string, offsetX:number, offsetY:number )=>{
     const graph = graphRef.current
-    if (!graph) return
+    if (!graph) 
+    {
+      return;
+    }
     const component = componentTypes[componentId];  
 
     graph.addNode({
@@ -324,6 +333,7 @@ console.log("graph 添加节点完成", node );
       label: component.originName,
       data: { nodedata:{ id:uuidv4(), 
          originName: component.originName,
+         alias: component.originName,
          color: '#409EFF', 
          componentTypeId: component.id,
          propertes: {} }},
@@ -338,18 +348,21 @@ console.log("graph 添加节点完成", node );
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     const graph = graphRef.current
-    if (!graph) return
-    console.log('drop event:', e);
+    if (!graph) {
+      return;
+    }
     const nodeData = JSON.parse(e.dataTransfer.getData('application/x6-node'))
     const { offsetX, offsetY } = e.nativeEvent
 
     addNode(nodeData.key as string, offsetX, offsetY);
+    const data = JSON.stringify(graph.toJSON());
+    workflowEditorBiz.saveEditorGraphData(graphId, data);
   }
 
   return (
     <div className="menuArea-container" 
-          onDragOver={handleDragOver}
-      onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
       >
         <div ref={containerRef} id="graph-container" />
     </div>

@@ -4,8 +4,6 @@ class WorkflowGraphEntity {
     name: string
     description: string
     content: string
-    nodeId: string
-    parentGraphId: string
     createTime: number
     createUser: string
     lastEditTime: number
@@ -13,8 +11,6 @@ class WorkflowGraphEntity {
         name: string,
         description: string,
         content: string,
-        nodeId:string, 
-        parentGraphId:string, 
         createTime: number, 
         createUser: string, 
         lastEditTime: number) {
@@ -25,8 +21,6 @@ class WorkflowGraphEntity {
         this.createTime = createTime;
         this.createUser = createUser;
         this.lastEditTime = lastEditTime;
-        this.nodeId = nodeId;
-        this.parentGraphId = parentGraphId;
     }   
 }
 export { WorkflowGraphEntity };
