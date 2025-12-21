@@ -1,5 +1,6 @@
 import {NodePropertyEntity} from "@/electron/db/entity/node_property_entity"
 import {WorkflowGraphEntity} from "@/electron/db/entity/workflow_graph_entity"
+import { promises } from "dns";
 
 export class WorkflowEditorBiz {
   private projectId: string;
@@ -45,6 +46,12 @@ export class WorkflowEditorBiz {
         const conveyor = window.conveyor;
         const projectApi = conveyor.project
         return await projectApi.QueryNodeProperties(this.projectId, this.projectVersion, nodeId);
+    }
+
+    public async DeleteNode(nodeId:string) :Promise<boolean> {
+        const conveyor = window.conveyor;
+        const projectApi = conveyor.project
+        return await projectApi.DeleteNode(this.projectId, this.projectVersion, nodeId);
     }
 
 }

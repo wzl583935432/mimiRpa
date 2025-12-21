@@ -1,14 +1,12 @@
 
-
 import os
 import sys
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.join(current_dir, '..', '..')
 sys.path.insert(0, project_root)
 
-from assistant_application import AssistantApplication
+from engine_application import EngineApplication
 import threading
-from uiAutomation.web_ui_automation_select import WebUIAutomationSelect
 from uiAutomation.tk_window_manager import TkWindowManager
 
 def change_to_app_dir():
@@ -37,13 +35,9 @@ def set_log():
 def main():
     change_to_app_dir()
     set_log()
-    WebUIAutomationSelect().init_run()
-    t = threading.Thread(target=AssistantApplication().start, daemon=True)
+    t = threading.Thread(target=EngineApplication().start, daemon=True)
     t.start()
     TkWindowManager().start()
-
-
-
 
 if __name__ == "__main__":
     main()

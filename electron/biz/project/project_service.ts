@@ -60,8 +60,6 @@ export class ProjectService{
             }
             // 2. 解析 JSON 字符串为 JS 对象
             const fileContent = JSON.stringify(projectInfoList);
-            console.log('saveProjectsToDisk', fileContent);
-            console.log('projectInfoFile', projectInfoFile);
                        // 1. 同步读取文件内容（获取字符串）
             fs.writeFileSync(projectInfoFile, fileContent, { encoding: 'utf8' });
             return true
@@ -368,5 +366,29 @@ export class ProjectService{
         }
         return workflowBiz.getPropertiesById(nodeId);
     }
+
+    public deleteNode(projectId:string, 
+        projectVersion:string, 
+        nodeId:string):boolean{
+        let workflowBiz = this.workflowBizMap.get(`${projectId}_${projectVersion}`);
+        if (!workflowBiz) {
+            workflowBiz = new WorkflowBiz(projectId, projectVersion);
+            workflowBiz.init();
+            this.workflowBizMap.set(`${projectId}_${projectVersion}`, workflowBiz);
+        }
+        return workflowBiz.deleteNode(nodeId);
+    }
+
+    public exportProject(projectId:string, 
+        projectVersion:string):string{
+        let workflowBiz = this.workflowBizMap.get(`${projectId}_${projectVersion}`);
+        if (!workflowBiz) {
+            workflowBiz = new WorkflowBiz(projectId, projectVersion);
+            workflowBiz.init();
+            this.workflowBizMap.set(`${projectId}_${projectVersion}`, workflowBiz);
+        }
+        return workflowBiz.exportProject();
+    }   
+
         
 }

@@ -34,6 +34,12 @@ export class ProjectService {
         const projectApi = conveyor.project
         return await projectApi.CreateNewProjectVersion(projectId, projectVersion);
     }   
+
+    public async exportProject(projectId:string, projectVersion:string) : Promise<string> { 
+        const conveyor = window.conveyor;
+        const projectApi = conveyor.project
+        return await projectApi.ExportProject(projectId, projectVersion);
+    }
     
 
 

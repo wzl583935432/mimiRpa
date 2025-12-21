@@ -72,10 +72,10 @@ const PropertyArea : React.FC<PropertyProb> = ({setCollapsed}) => {
 
   // 2. 字段值本地更新函数 (用于受控组件)
   const handleLocalValueChange = useCallback((fieldName) => (newValue) => {
-    setFormData(prevData => ({
-      ...prevData,
-      [fieldName]: newValue,
-    }));
+   // setFormData(prevData => ({
+   //   ...prevData,
+    //  [fieldName]: newValue,
+   // }));
 
   }, []);
   

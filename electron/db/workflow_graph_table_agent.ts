@@ -38,7 +38,16 @@ export class WorkflowGraphTableAgent{
         return null;
     }
 
-    getWorkflowGraphList(): Record<string,string> {
+    getAllWorkflowGraph(): WorkflowGraphEntity[] {
+        if (!this.db) {
+            throw new Error("Database not initialized.");
+        }
+        const stmt = this.db.prepare('SELECT * FROM workflow_graph');
+        const rows = stmt.all();
+        return rows.map(row => this.mapToWorkflowGraphEntity(row));
+    }
+
+    getWorkflowGraphNames(): Record<string,string> {
         if (!this.db) {
             throw new Error("Database not initialized.");
         }   

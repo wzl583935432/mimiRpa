@@ -5,6 +5,7 @@ import {NodeTreeArea } from './NodeTreeArea';
 import PropertyArea from './PropertyArea';
 import RuntimeArea from './RuntimeArea';
 import WorkflowEditor from './WorkflowEditor';
+import { ProjectService } from '@/app/biz/project_service';
 
 
 interface EditorProps {
@@ -12,14 +13,6 @@ interface EditorProps {
   projectId:string,
   projectVersion:string,
   onExecuteEvent:() => void;
-}
-
-// 定义一个 Ref 类型，用于访问 C 组件暴露的方法
-interface CCanvasRefHandle {
-    // C 组件暴露出来的保存方法
-    executeSave: () => void;
-    // C 组件暴露出来的当前数据
-    getCurrentData: () => string;
 }
 
 const Editor: React.FC<EditorProps> = ({projectId, projectVersion}) => {
@@ -37,8 +30,8 @@ const Editor: React.FC<EditorProps> = ({projectId, projectVersion}) => {
     <div className="layout-container">
       <div className={`top-panel ${isTopCollapsed ? 'collapsed' : ''}`}>
         <div className="panel-content">
-          <MenuArea onSaveTriggered={() => {
-            
+          <MenuArea onExportTriggered={() => {
+              ProjectService.getInstance().exportProject( projectId, projectVersion);
           }}
           execute={handleClickExecute} 
           setCollapsed = {(isCollapsed)=>setIsTopCollapsed(isCollapsed)}/>

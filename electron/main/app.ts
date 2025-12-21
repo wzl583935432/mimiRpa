@@ -8,6 +8,7 @@ import { registerprojectHandlers } from '@/electron/conveyor/handlers/project_ha
 import { registerEditorHandlers } from '../conveyor/handlers/editor_handler'
 import {registerUIHandlers } from '../conveyor/handlers/ui-handler'
 import { AgentService } from '../biz/base/agent_service'
+import log from 'electron-log'
 
 export function createAppWindow(): void {
   // Register custom protocol for resources
@@ -35,12 +36,19 @@ export function createAppWindow(): void {
     mainWindow.webContents.openDevTools();
   });
   // Register IPC events for the main window.
-  registerWindowHandlers(mainWindow)
-  registerAppHandlers(app)
-  registerprojectHandlers()
-  registerEditorHandlers()
-  registerUIHandlers()
-  AgentService.getInstance().init();
+  try {
+    registerWindowHandlers(mainWindow)
+    registerAppHandlers(app)
+    registerprojectHandlers()
+    registerEditorHandlers()
+    registerUIHandlers()
+    AgentService.getInstance().init();
+  }
+  catch (e) {
+    log.error(e)
+  }
+
+ 
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()

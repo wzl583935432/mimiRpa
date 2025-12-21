@@ -88,7 +88,7 @@ import fs from "fs";
         if(!this.workflowGraphTableAgent){
             throw new Error("database agent not initilized");
         }
-        return this.workflowGraphTableAgent.getWorkflowGraphList();
+        return this.workflowGraphTableAgent.getWorkflowGraphNames();
     }
 
 
@@ -180,6 +180,31 @@ import fs from "fs";
         } 
         // TODO 调用 NodePropertyAgent 获取节点属性
         return [];
+    }
+
+    public exportProject():string {
+        if(!this.db){
+            throw new Error("Database not initialized.");
+        }
+        const workflowGraphs:WorkflowGraphEntity[]|undefined =
+          this.workflowGraphTableAgent?.getAllWorkflowGraph();
+        const nodeProperties:NodePropertyEntity[]|undefined =
+          this.NodePropertyTableAgent?.getAllNodeProperties();
+        const exportData = {
+            workflowGraphs,
+            nodeProperties
+        }
+        const exportFilePath = path.join(AppService.getInstance().getBaseProjectWorkflowDir(), this.projectId, `${this.projectVersion}.json`);
+        fs.writeFileSync(exportFilePath, JSON.stringify(exportData));
+        return exportFilePath;
+    }   
+
+    public deleteNode(nodeId:string):boolean{
+        if(!this.db){
+            throw new Error("Database not initialized.");
+        }
+       this.NodePropertyTableAgent?.deleteNodePropertiesByNodeId(nodeId);
+       return true
     }
 
 

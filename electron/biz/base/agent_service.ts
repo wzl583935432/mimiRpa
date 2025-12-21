@@ -41,9 +41,9 @@ export class AgentService{
     public async init(): Promise<void>
     {
         if(this.isinit)
-            {
-                return;
-            }
+        {
+            return;
+        }
 
         await IPCService.getInstance().init();
         const port = IPCService.getInstance().GetPort();
@@ -52,8 +52,8 @@ export class AgentService{
         log.info(app.getAppPath())
         const pm = IPCService.getInstance().waitConnect(name, 10000);
         const filePath = path.join(app.getAppPath(), "service", "src", "assistant.py");
-        log.info("应用目录:", filePath);
-
+        log.info("应用目录------:", filePath);
+        
         let pythonExcutor = "python";
         if (process.platform === "win32") {
             pythonExcutor =  "python.exe";
@@ -84,8 +84,9 @@ export class AgentService{
             this.isinit = false;
             this.callbackCache ={}
         });
-        
+        log.info(` ws 创建中`);
         this.ws = await pm;
+        log.info(` ws 创建成功`);
         if(!this.ws){
            throw new Error("创建的连接异常"); 
         }
@@ -96,11 +97,11 @@ export class AgentService{
                 throw new  Error("消息对象不正确")
             }
             if(mobj.messageType === "response"){
-                console.log(mobj)
+                log.info(mobj)
                 const callbackInfo = this.callbackCache[mobj.messageId];
-                console.log( this.callbackCache, callbackInfo)
+                log.info( this.callbackCache, callbackInfo)
                 if(callbackInfo){
-                    console.log('---------------------', mobj.body)
+                    log.info('---------------------', mobj.body)
                     callbackInfo.resolve(mobj.body);
                 }
                 delete  this.callbackCache[mobj.messageId];
@@ -149,7 +150,7 @@ export class AgentService{
                 resolve:resolve,
                 reject:rejects
             }
-            console.log('messageId', messageId)
+            log.info('messageId', messageId)
             this.callbackCache[messageId] = callback;
             const msg:BaseMessage<string> ={
                 bizCode:"select",

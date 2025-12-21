@@ -55,6 +55,15 @@ export class NodePropertyTableAgent {
         );
     }
 
+    public getAllNodeProperties(): NodePropertyEntity[] {
+        if (!this.db) {
+            throw new Error("Database not initialized.");
+        }
+        const stmt = this.db.prepare('SELECT * FROM node_property');
+        const rows = stmt.all();
+        return rows.map((row: any) => this.mapToNodePropertyEntity(row));
+    }
+
     public deleteNodePropertiesByNodeId(nodeId: string): boolean {
         if (!this.db) {
             throw new Error("Database not initialized.");

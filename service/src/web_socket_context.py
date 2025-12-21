@@ -36,7 +36,7 @@ class WebSocketContext:
 
     def _connect(self):
         logger.info(f'开始启动连接服务{self._url}')
-                # 创建 WebSocket 对象
+        # 创建 WebSocket 对象
         self. ws = websocket.WebSocketApp(
             self._url,  # 替换成你的服务器地址
             on_open=self.on_open,

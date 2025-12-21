@@ -9,6 +9,10 @@ export const projectIpcSchema = {
     args: z.tuple([z.any()]), 
     return: z.any(),
   },
+  'project_export':{
+    args: z.tuple([z.string(), z.string()]),
+    return: z.string(),
+  },
   'project_create_new_version': {
     args: z.tuple([z.string(), z.string()]), // projectId, projectVersion
     return: z.any(),
@@ -52,5 +56,10 @@ export const projectIpcSchema = {
   'query_node_properties':{
     args: z.tuple([z.string(), z.string(), z.string()]), 
     return: z.array(z.any())
+  },
+  'delete_node':{
+    args: z.tuple([z.string(), z.string(), z.string()]),
+    return:z.boolean()
   }
+
 }

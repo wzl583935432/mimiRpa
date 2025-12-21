@@ -1,4 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Input, Select, Button } from 'antd';
 import { AimOutlined } from '@ant-design/icons';
 import SelectElement from './SelectElement';
@@ -14,8 +19,8 @@ interface InputRenderControlProps {
     name?: string;
   };
   value: any;
-  onValueChange?: (val: any) => void; // 可选：仅用于父组件同步显示
-  onUpdate: (component: any, field: string, val: any) => void;
+  onValueChange?: (val: any) => void; // 父级：编辑中同步
+  onUpdate: (component: any, field: string, val: any) => void; // 父级：最终保存
 }
 
 export const InputRenderControl: React.FC<InputRenderControlProps> = ({
@@ -28,43 +33,79 @@ export const InputRenderControl: React.FC<InputRenderControlProps> = ({
 }) => {
   const { inputType, options, placeholder, rows, name } = config;
 
-  const [itemValue, setItemValue] = useState<any>(value);
+  /** 本地编辑态（唯一渲染源） */
+  const [itemValue, setItemValue] = useState<any>("");
+
+  /** Dialog 状态 */
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  /** 外部 value 变化 → 同步本地（如切换节点） */
-  useEffect(() => {
-    setItemValue(value);
-  }, [value]);
+  /** 是否正在编辑（防止父级 value 覆盖输入） */
+  const isEditingRef = useRef(false);
 
-  /** 文本输入 */
-  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const val = e.target.value;
-    setItemValue(val);
-    onValueChange?.(val);
-  }, [onValueChange]);
+  /* ==================== 核心提交函数（统一出口） ==================== */
 
-  /** 失焦提交 */
-  const handleBlur = useCallback(() => {
+  const commitValue = () => {
+    
     if (itemValue !== value) {
       onUpdate(component, fieldName, itemValue);
     }
-  }, [component, fieldName, itemValue, value, onUpdate]);
+    isEditingRef.current = false;
+  }
 
-  /** Select 直接提交 */
-  const handleSelectChange = useCallback((val: any) => {
-    setItemValue(val);
-    onValueChange?.(val);
-    onUpdate(component, fieldName, val);
-  }, [component, fieldName, onUpdate, onValueChange]);
+  /* ==================== 外部 value 同步 ==================== */
 
-  /** Dialog */
-  const handleCloseDialog = useCallback((result?: any) => {
-    setIsDialogOpen(false);
-    if (result !== undefined && result !== itemValue) {
-      setItemValue(result);
-      onUpdate(component, fieldName, result);
+  useEffect(() => {
+    if (!isEditingRef.current && value !== itemValue) {
+      setItemValue(value);
     }
-  }, [component, fieldName, itemValue, onUpdate]);
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* ==================== 卸载兜底保存（🔥关键） ==================== */
+
+  useEffect(() => {
+    return () => {
+      if (itemValue !== value) {
+        onUpdate(component, fieldName, itemValue);
+      }
+    };
+  }, []); // 只在卸载时执行
+
+  /* ==================== 输入处理 ==================== */
+
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const val = e.target.value;
+      isEditingRef.current = true;
+      setItemValue(val);
+      onValueChange?.(val);
+    },
+    [onValueChange],
+  );
+
+  const handleSelectChange = useCallback(
+    (val: any) => {
+      isEditingRef.current = false;
+      setItemValue(val);
+      onValueChange?.(val);
+      onUpdate(component, fieldName, val); // Select 直接提交
+    },
+    [component, fieldName, onUpdate, onValueChange],
+  );
+
+  const handleCloseDialog = useCallback(
+    (result?: any) => {
+      setIsDialogOpen(false);
+      if (result !== undefined && result !== itemValue) {
+        isEditingRef.current = false;
+        setItemValue(result);
+        onValueChange?.(result);
+        onUpdate(component, fieldName, result);
+      }
+    },
+    [component, fieldName, itemValue, onUpdate, onValueChange],
+  );
+
+  /* ==================== 渲染 ==================== */
 
   switch (inputType) {
     case 'text':
@@ -72,7 +113,9 @@ export const InputRenderControl: React.FC<InputRenderControlProps> = ({
         <Input
           value={itemValue}
           onChange={handleTextChange}
-          onBlur={handleBlur}
+          onBlur={commitValue}
+          onPressEnter={commitValue}
+          onMouseDownCapture={commitValue} // 🔥 防止 blur 被吃
           placeholder={placeholder || `请输入${name ?? ''}`}
         />
       );
@@ -82,7 +125,8 @@ export const InputRenderControl: React.FC<InputRenderControlProps> = ({
         <Input.TextArea
           value={itemValue}
           onChange={handleTextChange}
-          onBlur={handleBlur}
+          onBlur={commitValue}
+          onMouseDownCapture={commitValue}
           rows={rows ?? 2}
           placeholder={placeholder || `请输入${name ?? ''}`}
         />
@@ -119,6 +163,11 @@ export const InputRenderControl: React.FC<InputRenderControlProps> = ({
       );
 
     default:
-      return <Input disabled value={`不支持的类型: ${inputType}`} />;
+      return (
+        <Input
+          disabled
+          value={`不支持的类型: ${inputType}`}
+        />
+      );
   }
 };

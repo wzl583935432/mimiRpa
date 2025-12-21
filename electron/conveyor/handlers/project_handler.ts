@@ -5,6 +5,7 @@ export const registerprojectHandlers = () => {
   // App operations
   handle('project_query_list', () => ProjectService.getInstance().getProjectList())
   handle('project_create_new', (arg) => ProjectService.getInstance().CreateProject(arg))
+  handle('project_export', (projectId, originVersion) => ProjectService.getInstance().exportProject(projectId, originVersion))
   handle('project_query_version_list',() =>ProjectService.getInstance().getProjectList())
   handle('query_graph_list', (projectId, originVersion)=> ProjectService.getInstance().getPageList(projectId, originVersion))
   handle('project_create_new_version', 
@@ -22,5 +23,8 @@ export const registerprojectHandlers = () => {
   )
   handle('query_node_properties',
     (projectId, projectVersion, nodeId) =>ProjectService.getInstance().getNodeProperties(projectId, projectVersion, nodeId)
+  )
+  handle('delete_node',
+    (projectId, projectVersion, nodeId) =>ProjectService.getInstance().deleteNode(projectId, projectVersion, nodeId)
   )
 }

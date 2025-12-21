@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { Graph, Shape } from '@antv/x6'
+import { Keyboard } from '@antv/x6-plugin-keyboard'
 import { Selection } from '@antv/x6-plugin-selection'
 import { register } from '@antv/x6-react-shape'
 import { v4 as uuidv4 } from 'uuid'
@@ -110,8 +111,8 @@ const CanvasArea = forwardRef<CRefHandle, CanvasProps>(({ graphId, projectId, ve
 
   const createGraph =():Graph|null=>{
     if (!containerRef.current) {
-          return null
-        }
+      return null
+    }
 
     // 创建图形实例
     const graph = new Graph({
@@ -178,17 +179,49 @@ const CanvasArea = forwardRef<CRefHandle, CanvasProps>(({ graphId, projectId, ve
       },
     });
 
-    
-    graph.use(
-      new Selection({
+    const keyboard = new Keyboard({
         enabled: true,
-        multiple: false,          // 是否允许多选
+    });
+
+    graph.use(
+      keyboard,
+    )
+    
+    keyboard.bindKey(['delete', 'backspace'], async (e) => {
+      const target = e.target as HTMLElement
+
+      // 输入框中不触发
+      if (
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.isContentEditable
+      ) {
+        return
+      }
+
+      const cells = graph.getSelectedCells()
+      if (cells.length) {
+        for(const cell in cells){
+          const cellitem = cell as any;
+          if (cellitem?.isNode()) {
+            await workflowEditorBiz.DeleteNode(cellitem.getData()?.nodedata.id)
+          }
+        }
+        graph.removeCells(cells)
+      }
+    })
+    const selection = new Selection({
+        enabled: true,
+        multiple: true,          // 是否允许多选
         rubberband: true,          // 是否允许拖框选
         showNodeSelectionBox: true, // 显示节点被选中的框
-        showEdgeSelectionBox: false, // 是否对边显示选中框
-        filter:["edge","node"],   // 过滤不需要被选中的元素
+        showEdgeSelectionBox: true, // 是否对边显示选中框
+        //filter:["edge","node"],   // 过滤不需要被选中的元素
         // 你还可以设置 filter、strict 等其他选项
       })
+
+    graph.use(
+      selection
     )
 
     
@@ -253,7 +286,7 @@ const CanvasArea = forwardRef<CRefHandle, CanvasProps>(({ graphId, projectId, ve
     graph.on('cell:change:size', ({ cell }) => {
       console.log('Cell size changed:', cell.id);
     });
-   
+
     return graph;
   }
 
@@ -341,6 +374,7 @@ const CanvasArea = forwardRef<CRefHandle, CanvasProps>(({ graphId, projectId, ve
         { id: `port_${uuidv4()}`, group: 'out' },
         { id: `port_${uuidv4()}`, group: 'in' },
       ],
+      selectable: true
     })
 
   }
