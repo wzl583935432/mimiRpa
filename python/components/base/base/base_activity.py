@@ -61,13 +61,14 @@ class BaseActivity:
     @classmethod
     def get_fields(cls)->list[FieldInfo]:
         fields = []
+        name_set = set()
         # 遍历 MRO，从父类到子类
         for base in reversed(cls.__mro__):
             type_hints = get_type_hints(base, include_extras=True)
             for name, annotated_type in type_hints.items():
-                if name in fields:
+                if name in name_set:
                     continue  # 子类字段覆盖父类字段
-
+                name_set.add(name)
                 origin = get_origin(annotated_type)
                 metadata = None
                 if origin is Annotated:

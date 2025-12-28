@@ -6,3 +6,4 @@ out
 .venv
 temp
 /service/agent/__pycache__/application.cpython-312.pyc
+/python/service/tests/plugins/plugin/operation_activity/__pycache__
