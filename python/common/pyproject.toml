@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "common-base"
+version = "1.0.0"
+description = "基础库"
+authors = [
+  { name="wzl", email="wzl0602@hotmail.com" },
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [           # 如果你的脚本依赖其他库，写在这里
+   # "common >= 1.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["common*"]

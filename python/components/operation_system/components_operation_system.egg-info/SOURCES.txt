@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+components_operation_system.egg-info/PKG-INFO
+components_operation_system.egg-info/SOURCES.txt
+components_operation_system.egg-info/dependency_links.txt
+components_operation_system.egg-info/requires.txt
+components_operation_system.egg-info/top_level.txt
+src/__init__.py
+src/read_file_activity.py

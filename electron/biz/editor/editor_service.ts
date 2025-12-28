@@ -1,5 +1,6 @@
 import componentTypeDO from "@/lib/Model/Editor/ComponentTypeDO";
 import NodeDO from "@/lib/Model/Editor/NodeDO";
+import { AgentService } from "../base/agent_service";
 
 export class EditorService {
     private static instance: EditorService;
@@ -19,7 +20,9 @@ export class EditorService {
     
 
 
-    public queryNodeTreeData() :NodeDO[]{
+    public async queryNodeTreeData() :Promise<NodeDO[]>{
+
+        return await AgentService.getInstance().queryComponentsTree(10000);
         const treeData = [
             {
                 id: '0',
@@ -86,7 +89,9 @@ export class EditorService {
     }
 
 
-    public queryComponentTypes() :Record<string, componentTypeDO>{
+    public async queryComponentTypes() :Promise<Record<string, componentTypeDO>>{
+        return await AgentService.getInstance().queryComponentTypes(10000);
+
         const componentTypes: Record<string, componentTypeDO> = {
             'ui_get_element_text': {
                 id: 'ui_get_element_text',

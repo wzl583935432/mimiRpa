@@ -51,7 +51,7 @@ export class AgentService{
         const name = "agent";
         log.info(app.getAppPath())
         const pm = IPCService.getInstance().waitConnect(name, 10000);
-        const filePath = path.join(app.getAppPath(), "service", "src", "assistant.py");
+        const filePath = path.join(app.getAppPath(),"python", "service", "src", "assistant.py");
         log.info("应用目录------:", filePath);
         
         let pythonExcutor = "python";
@@ -170,6 +170,63 @@ export class AgentService{
         })
     }
 
-    
+
+    public async queryComponentsTree(timeout:number):Promise<any>{
+
+        return new Promise((resolve, rejects) =>{   
+            const messageId = uuidv4();
+            const callback:AgentCallBack = {
+                messageID:messageId,
+                timeout:timeout,
+                resolve:resolve,
+                reject:rejects
+            }
+            this.callbackCache[messageId] = callback;
+            const msg:BaseMessage<string> ={
+                bizCode:"components",
+                requestCode:"get_components_tree",
+                messageId: messageId,
+                messageType:"request",
+            }
+            const str = JSON.stringify(msg);    
+            this.ws.send(str);
+            if(timeout >0){
+                setTimeout(() => {
+                delete this.callbackCache[messageId];
+                rejects("超时了")
+            }, timeout);    
+            }
+        })
+    }
+
+    public async queryComponentTypes(timeout:number):Promise<any>{
+
+        return new Promise((resolve, rejects) =>{
+            const messageId = uuidv4();
+            const callback:AgentCallBack = {
+                messageID:messageId,
+                timeout:timeout,
+                resolve:resolve,
+                reject:rejects
+            }       
+            this.callbackCache[messageId] = callback;
+
+            const msg:BaseMessage<string> ={
+                bizCode:"components",
+                requestCode:"get_component_types",  
+                messageId: messageId,
+                messageType:"request",
+            }
+            const str = JSON.stringify(msg);
+            this.ws.send(str);
+            if(timeout >0){
+                setTimeout(() => {
+                delete this.callbackCache[messageId];
+                rejects("超时了")
+            }, timeout);
+            }
+        })
+    }
+
 
 }

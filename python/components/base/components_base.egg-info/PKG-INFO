@@ -1,0 +1,19 @@
+Metadata-Version: 2.4
+Name: components-base
+Version: 1.0.0
+Summary: 基础库
+Author-email: wzl <wzl0602@hotmail.com>
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: common-base>=1.0.0
+
+组件基础定义
+
+# 安装构建工具
+pip install --upgrade build
+
+# 在项目根目录下执行构建
+python -m build
+
+
+pip install -e .

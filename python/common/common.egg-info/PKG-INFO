@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: common
+Version: 1.0.0
+Summary: 基础库
+Author-email: wzl <wzl0602@hotmail.com>
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown

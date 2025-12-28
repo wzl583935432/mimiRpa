@@ -1,0 +1,15 @@
+README.md
+pyproject.toml
+base/__init__.py
+base/activity_exception.py
+base/activity_manager.py
+base/arguments.py
+base/base_activity.py
+base/field_annotation.py
+base/final_activity_decorate.py
+base/variables.py
+components_base.egg-info/PKG-INFO
+components_base.egg-info/SOURCES.txt
+components_base.egg-info/dependency_links.txt
+components_base.egg-info/requires.txt
+components_base.egg-info/top_level.txt
