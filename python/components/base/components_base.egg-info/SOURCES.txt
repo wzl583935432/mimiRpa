@@ -3,6 +3,7 @@ pyproject.toml
 base/__init__.py
 base/activity_exception.py
 base/activity_manager.py
+base/activity_node_info.py
 base/arguments.py
 base/base_activity.py
 base/field_annotation.py

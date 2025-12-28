@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from field_annotation import InputType, DirectionType
+from .field_annotation import InputType, DirectionType
 @dataclass
 class FieldInfo:
     field_name:str

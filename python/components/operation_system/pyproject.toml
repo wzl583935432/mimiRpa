@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "components-operation_system"
+name = "components-operation-system"
 version = "1.0.0"
 description = "基础库"
 authors = [
@@ -14,6 +14,9 @@ requires-python = ">=3.7"
 dependencies = [           # 如果你的脚本依赖其他库，写在这里
     "components-base >= 1.0.0",
 ]
+
+[project.entry-points."components.operation_system"]
+read_file_activity = "operation_activity.read_file_activity:ReadFileActivity"
 
 [tool.setuptools.packages.find]
 where = ["."]

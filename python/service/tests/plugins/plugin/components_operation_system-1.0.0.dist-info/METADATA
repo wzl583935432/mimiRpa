@@ -1,8 +1,11 @@
 Metadata-Version: 2.4
-Name: mimi_ui_automation
+Name: components-operation-system
 Version: 1.0.0
-Summary: mimi ui 自动化
+Summary: 基础库
 Author-email: wzl <wzl0602@hotmail.com>
-Requires-Python: >=3.12
+Requires-Python: >=3.7
 Description-Content-Type: text/markdown
 Requires-Dist: components-base>=1.0.0
+
+用于操作系统的功能操作
+如文件操作

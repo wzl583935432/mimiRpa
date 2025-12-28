@@ -1,2 +1,0 @@
-[mimi.ui_automation]
-mimi_ui_automation = automation.entry_points:EntryPoints

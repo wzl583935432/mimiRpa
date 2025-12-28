@@ -3,7 +3,8 @@ pyproject.toml
 components_operation_system.egg-info/PKG-INFO
 components_operation_system.egg-info/SOURCES.txt
 components_operation_system.egg-info/dependency_links.txt
+components_operation_system.egg-info/entry_points.txt
 components_operation_system.egg-info/requires.txt
 components_operation_system.egg-info/top_level.txt
-src/__init__.py
-src/read_file_activity.py
+operation_activity/__init__.py
+operation_activity/read_file_activity.py

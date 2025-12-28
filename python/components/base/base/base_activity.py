@@ -1,6 +1,6 @@
 from .field_annotation import FieldAnnotation, InputType
 from typing import Annotated, get_type_hints, get_origin, get_args
-from activity_node_info import ActivityNodeInfo, FieldInfo
+from .activity_node_info import ActivityNodeInfo, FieldInfo
 
 class BaseActivity:
     result: Annotated[any, 
@@ -21,8 +21,10 @@ class BaseActivity:
                                         input_type= InputType.Label,
                                         isvisible=True,
                                         isrequired=True,  defaultvalue="")]
-    def __init__(self, name):
-        self.display_name = name
+    def __init__(self):
+        if(hasattr(self, '_final_activity_decorate_name') and None != self._final_activity_decorate_name):
+           self.original_name = self._final_activity_decorate_name
+        pass
 
     def before(self):
         print(f"Starting activity: {self.display_name}")
@@ -35,16 +37,25 @@ class BaseActivity:
     
     @classmethod
     def get_node_info(cls) -> ActivityNodeInfo:
-        node_info = ActivityNodeInfo()
+        
+        path:list[str] = []
         if(hasattr(cls, '_final_activity_decorate_path') and None != cls._final_activity_decorate_path):
-            node_info.path = cls._final_activity_decorate_path.split("|")
+            path = cls._final_activity_decorate_path.split("|")
+        name = "未知组件"
         if(hasattr(cls, '_final_activity_decorate_name') and None != cls._final_activity_decorate_name):
-            node_info.name = cls._final_activity_decorate_name
+            name = cls._final_activity_decorate_name
+        description = ""
         if(hasattr(cls, '_final_activity_decorate_description') and None != cls._final_activity_decorate_description):
-            node_info.description = cls._final_activity_decorate_description
-        node_info.activity_class = cls.__name__
-        node_info. fields = cls.get_fields()
-
+            description = cls._final_activity_decorate_description
+        activity_class = cls.__name__
+        fields = cls.get_fields()
+        node_info = ActivityNodeInfo(
+            path=path,
+            class_name=activity_class,
+            description=description,
+            original_name=name,
+            fields=fields
+        )
         return node_info
 
     @classmethod
@@ -56,8 +67,7 @@ class BaseActivity:
             for name, annotated_type in type_hints.items():
                 if name in fields:
                     continue  # 子类字段覆盖父类字段
-                field_info = FieldInfo()
-                field_info.field_name = name
+
                 origin = get_origin(annotated_type)
                 metadata = None
                 if origin is Annotated:
@@ -72,14 +82,16 @@ class BaseActivity:
                 if metadata is None:
                     # 如果字段没有 Annotated，创建默认 FieldAnnotation
                     metadata = FieldAnnotation(display_name=name)
-                field_info.field_type = typ.__name__
-                field_info.display_name = metadata.display_name
-                field_info.description = metadata.description
-                field_info.isvisible = metadata.isvisible
-                field_info.isrequired = metadata.isrequired
-                field_info.defaultvalue = metadata.defaultvalue
-                field_info.direction = metadata.direction
-                field_info.input_type = metadata.input_type
-
+                field_info = FieldInfo( 
+                    field_name= name,
+                    display_name= metadata.display_name,
+                    description= metadata.description,
+                    isvisible= metadata.isvisible,
+                    isrequired= metadata.isrequired,
+                    defaultvalue= metadata.defaultvalue,
+                    direction=metadata.direction,
+                    input_type=metadata.input_type,
+                    field_type= typ.__name__
+                )
                 fields.append(field_info)
         return fields
