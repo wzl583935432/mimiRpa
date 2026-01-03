@@ -92,7 +92,9 @@ class BaseActivity:
                     defaultvalue= metadata.defaultvalue,
                     direction=metadata.direction,
                     input_type=metadata.input_type,
-                    field_type= typ.__name__
+                    field_type= typ.__name__,
+                    readonly= False,
+                    options= metadata.options if hasattr(metadata, 'options') else []
                 )
                 fields.append(field_info)
         return fields

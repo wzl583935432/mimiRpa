@@ -1,0 +1,2 @@
+[components.ui_activity]
+read_file_activity = operation_activity.read_file_activity:ReadFileActivity

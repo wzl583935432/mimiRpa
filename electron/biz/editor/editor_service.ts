@@ -1,10 +1,32 @@
-import componentTypeDO from "@/lib/Model/Editor/ComponentTypeDO";
+import componentTypeDO  from "@/lib/Model/Editor/ComponentTypeDO";
+import ComponentPropertTypeDO from "@/lib/Model/Editor/ComponentPropertyTypeDO";
 import NodeDO from "@/lib/Model/Editor/NodeDO";
 import { AgentService } from "../base/agent_service";
 
+enum InputType{
+    Text = 1,
+    TextArea = 2,
+    Number = 3,
+    Boolean = 4,
+    Select = 5,
+    Option = 6,
+    File = 7,
+    Label = 8,
+    TargetElement = 9
+}
+
+enum DirectionType{
+    In = 1,
+    Out = 2
+}
+
+
+
 export class EditorService {
     private static instance: EditorService;
-
+    private node_tree_cache: NodeDO[] | null = null;
+    private component_types_cache: Record<string, componentTypeDO>| null = null;
+    private list_components:any[] | null = null;
     private constructor() {
     }
 
@@ -17,12 +39,180 @@ export class EditorService {
         return EditorService.instance;
     }
 
-    
+    private cacheComponentsTypes(list_components): Record<string, componentTypeDO>| null {
+        if(this.component_types_cache){
+            return this.component_types_cache;
+        }
+        if(!list_components){
+            return this.component_types_cache;
+        }
+        console.log("组件列表详情------", list_components);
+        const componentTypes: Record<string, componentTypeDO> = {};
+        for(const item of list_components){
+            const compType: componentTypeDO = {
+                id: item.class_name,
+                originName: item.original_name,
+                type: item.type,
+                propertes: []
+            };
+            console.log("组件详情------", item.fields);
+            for (const field of item.fields) {
 
 
-    public async queryNodeTreeData() :Promise<NodeDO[]>{
+                const fieldProperty:ComponentPropertTypeDO  = {
+                    id: field.field_name,
+                    name: field.display_name,
+                    visiable: field.isvisible,
+                    readonly: field.readonly,
+                    isisrequired: field.isrequired,
+                    defaultValue: field.defaultvalue,
+                    description: field.description,
+                    inputType: this.turnInputType(field.input_type),
+                    type: this.turnFieldType(field.field_type),
+                    options: field['options'] || [],
+                    direction: field['direction'] || 0
+                };
+                console.log("组件属性详情------", fieldProperty);
+                compType.propertes.push(fieldProperty);
+                // 这里可以根据需要对 prop 进行进一步处理
+            }
+            componentTypes[item.class_name] = compType;
+        }
+        this.component_types_cache = componentTypes;
+        return this.component_types_cache;
+    };
 
-        return await AgentService.getInstance().queryComponentsTree(10000);
+    private turnInputType(input_type:InputType): string{
+        switch(input_type){
+            case InputType.Text:
+                return "text";
+            case InputType.Number:
+                return "number";
+            case InputType.TargetElement:
+                return "targetElement";
+            case InputType.Select:
+                return "select";
+            case InputType.TextArea:
+                return "textarea";
+            default:
+                return "text";
+        }
+    }
+
+    private turnFieldType(field_type:string): string{
+        switch(field_type){
+            case "str":
+                return "string";
+            case "int":
+                return "number";
+            case "float":
+                return "number";
+            case "bool":
+                return "boolean";
+            default:
+                return "any";
+        }
+    }
+
+    private cacheNodeTree(list_components): NodeDO[] | null {
+        if(this.node_tree_cache){
+            return this.node_tree_cache;
+        }
+        if(!list_components){
+            return this.node_tree_cache;
+        }   
+        const treeData:NodeDO[] = [];
+
+        for(const item of list_components){
+            if(!item.path){
+
+                const newItem:NodeDO = {
+                    id: item.id,
+                    componentType: item.class_name,
+                    originName: item.original_name,
+                    describe: item.description,
+                    isLeaf: true,
+                    children: null
+                };
+                treeData.push(newItem);
+                continue;
+            }
+            let currentNode:NodeDO|undefined  = undefined;
+            if(item.path){
+                for(let i=0; i<item.path.length; i++){
+                    if(!currentNode){
+                        let rootNode:NodeDO|undefined = undefined;
+                        rootNode = treeData.find(n => n.originName === item.path[0]);
+                        if(!rootNode){
+                            rootNode = { 
+                                id: item.path[i],
+                                componentType: 'folder',
+                                originName: item.path[i],
+                                isLeaf: false,
+                                describe: "",
+                                children: []
+                            };
+                            treeData.push(rootNode);
+                        }
+                        currentNode = rootNode;
+                    }else{
+                        let rootNode:NodeDO|undefined = undefined;
+                        if(currentNode.children){
+                            rootNode = currentNode.children.find(n => n.originName === item.path[0]);
+                        }else{
+                            currentNode.children = [];
+                        }
+                        if(!rootNode){
+                            rootNode = { 
+                                id: item.path[i],
+                                componentType: 'folder',
+                                originName: item.path[i],
+                                isLeaf: false,
+                                describe: "",
+                                children: []
+                            };
+                            currentNode.children.push(rootNode);
+                        }
+                        currentNode = rootNode;
+                    }
+                }
+            }
+            const newItem:NodeDO = {
+                    id: item.id,
+                    componentType: item.class_name,
+                    originName: item.original_name,
+                    describe: item.description,
+                    isLeaf: true,
+                    children: null
+                };
+        
+            if(currentNode){
+                if(!currentNode.children){
+                    currentNode.children = [];
+                }   
+                currentNode.children.push(newItem);
+            }else{
+                treeData.push(newItem);
+            }
+
+        }
+        this.node_tree_cache = treeData;
+        return this.node_tree_cache;
+    }
+
+
+    public async queryNodeTreeData() :Promise<NodeDO[]| null>{
+        if(this.node_tree_cache){
+            return this.node_tree_cache;
+        }
+        if(!this.list_components){
+        
+            this.list_components = await AgentService.getInstance().queryComponentsTree(10000);
+        }
+        this.cacheNodeTree(this.list_components);
+        return this.node_tree_cache;
+    }
+    /*private async queryNodeTreeData():Promise<NodeDO[]>{
         const treeData = [
             {
                 id: '0',
@@ -86,12 +276,20 @@ export class EditorService {
     ];
     return treeData;
     
-    }
+    }*/
 
 
     public async queryComponentTypes() :Promise<Record<string, componentTypeDO>>{
-        return await AgentService.getInstance().queryComponentTypes(10000);
-
+        if(this.component_types_cache){
+            return this.component_types_cache;
+        }
+        if(!this.list_components){
+        
+            this.list_components = await AgentService.getInstance().queryComponentsTree(10000);
+        }
+        this.cacheComponentsTypes(this.list_components);
+        return this.component_types_cache??{};
+        /*
         const componentTypes: Record<string, componentTypeDO> = {
             'ui_get_element_text': {
                 id: 'ui_get_element_text',
@@ -135,6 +333,6 @@ export class EditorService {
             },
         };
 
-        return componentTypes;
+        return componentTypes;*/
     }
 }

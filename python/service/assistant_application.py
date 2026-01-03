@@ -5,6 +5,7 @@ import sys
 from web_socket_context import WebSocketContext
 from loguru import logger
 from controller.selector_controller import SelectController
+from controller.componets_controller import ComponentsController
 from common.exception.sys_exception import SYSException
 class AssistantApplication:
     _instance = None
@@ -33,7 +34,8 @@ class AssistantApplication:
             logger.info(args.name)
             self._appname= args.name
             self.route = {
-                'select':SelectController()
+                'select':SelectController(),
+                'components':ComponentsController()
             }
             self.ws_context = WebSocketContext(f"ws://localhost:{args.port}", args.name, on_message=self.on_request )
             self.ws_context.start()

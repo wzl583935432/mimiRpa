@@ -1,0 +1,7 @@
+operation_activity/__init__.py,sha256=yZcRO75i5dZmutWhK6IWel3jSFNBztD6D2A0mp4qZw4,113
+operation_activity/read_file_activity.py,sha256=XeLDkfiib_86WBvllWBRuXrQAESvVKmscYUorFjJHwc,1378
+components_operation_system-1.0.0.dist-info/METADATA,sha256=OtzQbJDW4kFXt5wFOJiOs_y3Q8SH0EGkDKRdu9oVcXA,293
+components_operation_system-1.0.0.dist-info/WHEEL,sha256=_zCd3N1l69ArxyTb8rzEoP9TpbYXkqRFSNOD5OuxnTs,91
+components_operation_system-1.0.0.dist-info/entry_points.txt,sha256=WTn22X0dpC1Lh1gGYahoullLcTRp1UKfpTwvJrQhzLg,106
+components_operation_system-1.0.0.dist-info/top_level.txt,sha256=ZyVCSRaCeGBuaopkuQT4Les4_vLqtV0O_Kv-qsMUZ0s,19
+components_operation_system-1.0.0.dist-info/RECORD,,

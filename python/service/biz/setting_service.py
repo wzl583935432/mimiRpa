@@ -7,6 +7,7 @@ class SettingService:
     _lock = threading.Lock()  
     route = {}
     ws_context = None
+    _app_path = ""
 
     def __new__(cls):
         if not cls._instance:
@@ -18,6 +19,7 @@ class SettingService:
     def __init__(self):
         app_path = os.getcwd()
         self._path = os.path.join(app_path, "components")
+        self._app_path = app_path
         pass
     
     def get_instance(self):
@@ -29,3 +31,6 @@ class SettingService:
     
     def get_componets_path(self):
         return self._path
+    
+    def get_app_path(self):
+        return self._app_path

@@ -1,5 +1,5 @@
 from common.exception.sys_exception import SYSException
-from ..assistant.componets_service import ComponetsService
+from biz.componets_service import ComponetsService
 from loguru import logger
 class ComponentsController:
     route = {} 
@@ -7,9 +7,9 @@ class ComponentsController:
         self.route["get_components_tree"] = self.get_components_tree
         pass
 
-    def get_components_tree(self, socket, msg):
+    async def get_components_tree(self, socket, msg):
         try:
-            return ComponetsService().get_instance().query_components(msg.get('params'))
+            return ComponetsService().get_instance().query_components()
             ##workflow.start()
         except Exception as e:
             logger.error(f"Failed to start workflow: {e}")

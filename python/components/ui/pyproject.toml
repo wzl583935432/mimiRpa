@@ -15,6 +15,9 @@ dependencies = [           # 如果你的脚本依赖其他库，写在这里
     "components-base >= 1.0.0",
 ]
 
+[project.entry-points."components.ui_activity"]
+read_file_activity = "operation_activity.read_file_activity:ReadFileActivity"
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["automation*"]

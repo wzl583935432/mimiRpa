@@ -51,7 +51,7 @@ export class AgentService{
         const name = "agent";
         log.info(app.getAppPath())
         const pm = IPCService.getInstance().waitConnect(name, 10000);
-        const filePath = path.join(app.getAppPath(),"python", "service", "src", "assistant.py");
+        const filePath = path.join(app.getAppPath(),"python", "service", "assistant.py");
         log.info("应用目录------:", filePath);
         
         let pythonExcutor = "python";
