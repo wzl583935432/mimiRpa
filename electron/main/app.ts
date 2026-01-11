@@ -2,11 +2,7 @@ import { BrowserWindow, shell, globalShortcut, app } from 'electron'
 import { join } from 'path'
 import appIcon from '@/resources/build/mimiRpa.Png?asset'
 import { registerResourcesProtocol } from './protocols'
-import { registerWindowHandlers } from '@/electron/conveyor/handlers/window-handler'
-import { registerAppHandlers } from '@/electron/conveyor/handlers/app-handler'
-import { registerprojectHandlers } from '@/electron/conveyor/handlers/project_handler'
-import { registerEditorHandlers } from '../conveyor/handlers/editor_handler'
-import {registerUIHandlers } from '../conveyor/handlers/ui-handler'
+import {registerHandlers} from '../conveyor/handlers/index'
 import { AgentService } from '../biz/base/agent_service'
 import log from 'electron-log'
 
@@ -37,11 +33,7 @@ export function createAppWindow(): void {
   });
   // Register IPC events for the main window.
   try {
-    registerWindowHandlers(mainWindow)
-    registerAppHandlers(app)
-    registerprojectHandlers()
-    registerEditorHandlers()
-    registerUIHandlers()
+    registerHandlers(app, mainWindow);
     AgentService.getInstance().init();
   }
   catch (e) {

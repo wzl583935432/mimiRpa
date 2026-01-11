@@ -41,7 +41,12 @@ export class ProjectService {
         return await projectApi.ExportProject(projectId, projectVersion);
     }
     
-
+    public async startProject(projectId:string, projectVersion:string): Promise<string> {
+        const workflowPath = await this.exportProject(projectId, projectVersion);
+        const conveyor = window.conveyor;
+        const engineApi = conveyor.engine
+        return await engineApi.startWorkflow(workflowPath, {});
+    }
 
     
 

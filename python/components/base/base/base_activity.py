@@ -83,17 +83,23 @@ class BaseActivity:
                 if metadata is None:
                     # 如果字段没有 Annotated，创建默认 FieldAnnotation
                     metadata = FieldAnnotation(display_name=name)
+
+                default_value = metadata.defaultvalue
+                if name == 'original_name' or name == 'display_name':
+                    default_value = cls._final_activity_decorate_name
+                
                 field_info = FieldInfo( 
                     field_name= name,
                     display_name= metadata.display_name,
                     description= metadata.description,
                     isvisible= metadata.isvisible,
                     isrequired= metadata.isrequired,
-                    defaultvalue= metadata.defaultvalue,
+                    defaultvalue= default_value,
                     direction=metadata.direction,
                     input_type=metadata.input_type,
                     field_type= typ.__name__,
                     readonly= False,
+                    params= metadata.params,
                     options= metadata.options if hasattr(metadata, 'options') else []
                 )
                 fields.append(field_info)

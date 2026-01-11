@@ -23,7 +23,7 @@ const Editor: React.FC<EditorProps> = ({projectId, projectVersion}) => {
   const [isBottomCollapsed, setIsBottomCollapsed] = useState(false);
 
   const handleClickExecute = () => {
-    
+     ProjectService.getInstance().startProject( projectId, projectVersion);
   };
 
   return (

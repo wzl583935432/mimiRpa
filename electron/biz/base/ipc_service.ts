@@ -9,6 +9,14 @@ interface PromiseResult{
     reject:(reason:any) =>void;
 }
 
+export interface ServiceCallBack{
+    messageID:string,
+    timeout:number,
+    resolve:(value:any)=>void;
+    reject:(reason:any) =>void;
+}
+
+
 export class  IPCService{
     private static instance: IPCService;
 

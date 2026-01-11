@@ -1,6 +1,6 @@
 
 
-import {IPCService} from './ipc_service'
+import {IPCService, ServiceCallBack} from './ipc_service'
 import { spawn } from "child_process";
 import { app } from 'electron';
 import path from 'path';
@@ -10,12 +10,6 @@ import { v4 as uuidv4 } from 'uuid';
 import log from 'electron-log'
 
 
-interface AgentCallBack{
-    messageID:string,
-    timeout:number,
-    resolve:(value:any)=>void;
-    reject:(reason:any) =>void;
-}
 
 export class AgentService{
     private static instance: AgentService;
@@ -36,7 +30,7 @@ export class AgentService{
 
     private ws: WebSocket|null = null ;
     
-    private callbackCache:Record<string,AgentCallBack> = {};
+    private callbackCache:Record<string,ServiceCallBack> = {};
 
     public async init(): Promise<void>
     {
@@ -51,8 +45,8 @@ export class AgentService{
         const name = "agent";
         log.info(app.getAppPath())
         const pm = IPCService.getInstance().waitConnect(name, 10000);
-        const filePath = path.join(app.getAppPath(),"python", "service", "assistant.py");
-        log.info("应用目录------:", filePath);
+        //const filePath = path.join(app.getAppPath(),"python", "service", "assistant", "assistant.py");
+        //log.info("应用目录------:", filePath);
         
         let pythonExcutor = "python";
         if (process.platform === "win32") {
@@ -62,9 +56,24 @@ export class AgentService{
         } else {
             pythonExcutor = "python3";
         }
-   
+
+        if (process.platform === "win32") {
+            pythonExcutor = path.join(app.getAppPath(), ".venv", "Scripts", "python.exe");
+        } else {
+            pythonExcutor = path.join(app.getAppPath(), ".venv", "bin", "python3");
+        }
+
+        const pythonRoot = path.join(app.getAppPath(), "python");
+        const env = {
+        ...process.env,
+        PYTHONPATH: pythonRoot
+        };
         // 启动 Python 程序
-        const pyProcess = spawn(pythonExcutor, [filePath, `--port=${port}`, `--name=${name}`], {
+        const pyProcess = spawn(pythonExcutor, 
+            ["-m", "service.assistant", `--port=${port}`, `--name=${name}`],
+            {
+            cwd: pythonRoot,
+            env: env,
             stdio: "pipe", // 捕获输出
         });
         this.isinit = true;
@@ -101,7 +110,8 @@ export class AgentService{
                 const callbackInfo = this.callbackCache[mobj.messageId];
                 log.info( this.callbackCache, callbackInfo)
                 if(callbackInfo){
-                    log.info('---------------------', mobj.body)
+                    log.info(mobj)
+                    log.info('---------message------------', mobj.body)
                     callbackInfo.resolve(mobj.body);
                 }
                 delete  this.callbackCache[mobj.messageId];
@@ -115,7 +125,7 @@ export class AgentService{
         
         return new Promise((resolve, rejects) =>{
             const messageId = uuidv4();
-            const callback:AgentCallBack = {
+            const callback:ServiceCallBack = {
                 messageID:messageId,
                 timeout:timeout,
                 resolve:resolve,
@@ -144,7 +154,7 @@ export class AgentService{
 
         return new Promise((resolve, rejects) =>{
             const messageId = uuidv4();
-            const callback:AgentCallBack = {
+            const callback:ServiceCallBack = {
                 messageID:messageId,
                 timeout:timeout,
                 resolve:resolve,
@@ -175,7 +185,7 @@ export class AgentService{
 
         return new Promise((resolve, rejects) =>{   
             const messageId = uuidv4();
-            const callback:AgentCallBack = {
+            const callback:ServiceCallBack = {
                 messageID:messageId,
                 timeout:timeout,
                 resolve:resolve,
@@ -203,7 +213,7 @@ export class AgentService{
 
         return new Promise((resolve, rejects) =>{
             const messageId = uuidv4();
-            const callback:AgentCallBack = {
+            const callback:ServiceCallBack = {
                 messageID:messageId,
                 timeout:timeout,
                 resolve:resolve,

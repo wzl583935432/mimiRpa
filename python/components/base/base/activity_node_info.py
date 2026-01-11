@@ -14,6 +14,7 @@ class FieldInfo:
     input_type: InputType
     field_type: str
     readonly: bool = False
+    params:str
     options: list[tuple[str, Any]] = field(default_factory=list)
 
 

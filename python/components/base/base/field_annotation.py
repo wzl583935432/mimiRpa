@@ -10,6 +10,11 @@ class InputType(Enum):
     File = 7
     Label = 8
     TargetElement = 9
+    Variable = 10
+    SelectFile = 11
+    SaveFile = 12
+    Folder = 13 
+
 
 class DirectionType(Enum):
     In = 1
@@ -25,10 +30,11 @@ class FieldAnnotation:
     direction: DirectionType
     input_type: InputType
     options: list[tuple[str, any]] = []
+    params:str
     def __init__(self, display_name: str, description: str = "", isvisible: bool = True,
                  isrequired: bool = False, input_type: InputType = InputType.Text,
                  defaultvalue: any = None, direction: DirectionType = DirectionType.In,
-                 options: list[tuple[str, any]] = []):
+                 options: list[tuple[str, any]] = [], params:str =""):
         self.display_name = display_name
         self.description = description
         self.isvisible = isvisible
@@ -37,6 +43,7 @@ class FieldAnnotation:
         self.defaultvalue = defaultvalue
         self.direction = direction  
         self.options = options
+        self.params = params
 
     def __repr__(self):
         return f"FieldAnnotation(type={self.event_type}, p={self.priority})"

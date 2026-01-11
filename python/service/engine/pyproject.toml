@@ -1,0 +1,28 @@
+# MySuperProject/pyproject.toml
+
+[build-system]
+# 定义构建此项目所需的工具
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# 项目基本信息
+name = "my-super-project"      # 包的名称，在 PyPI 上是唯一的
+version = "0.1.0"             # 当前版本号
+description = "A project demonstrating shared package dependencies (a, b, c)."
+readme = "README.md"
+authors = [
+    {name = "Your Name", email = "you@example.com"}
+]
+license = {file = "LICENSE"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+# 定义项目的入口点，这对于您的 a 和 b 应用程序很有用
+# 如果您想让用户可以直接运行 'app_a' 命令
+[project.scripts]
+app_a = "a.main_a:run_a"  # 当用户安装包后，执行 a/main_a.py 中的 run_a()
+app_b = "b.main_b:run_b"  # 当用户安装包后, 执行 b/main_b.py 中的 run_b()

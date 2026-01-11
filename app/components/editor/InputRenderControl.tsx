@@ -4,9 +4,11 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Input, Select, Button } from 'antd';
+import { Upload, Input, Button, Select, message, Space  } from 'antd';
 import { AimOutlined } from '@ant-design/icons';
 import SelectElement from './SelectElement';
+import { UploadOutlined } from '@ant-design/icons';
+
 
 interface InputRenderControlProps {
   component: any;
@@ -136,11 +138,14 @@ export const InputRenderControl: React.FC<InputRenderControlProps> = ({
       return (
         <Select
           value={itemValue}
-          options={options}
+          options={[{'label':"true", "value":true}, {'label':"false", "value":false}]}
           onChange={handleSelectChange}
           placeholder={placeholder || `请选择${name ?? ''}`}
         />
       );
+
+    case "label":
+      return (<label>: {itemValue}</label>);
 
     case 'targetElement':
       return (
@@ -162,6 +167,34 @@ export const InputRenderControl: React.FC<InputRenderControlProps> = ({
         </>
       );
 
+    case 'file':
+       return (
+        <Space.Compact style={{ width: 200 }}>
+          <Input
+            placeholder="输入文件"
+            value={itemValue}
+            onChange={handleSelectChange}
+          />
+
+          <Upload
+            accept=".png,.jpg,.jpeg"
+            showUploadList={false}
+            beforeUpload={ (file)=> handleSelectChange(file.name) }
+          >
+            <Button icon={<UploadOutlined />}></Button>
+          </Upload>
+        </Space.Compact>
+      );
+
+    case 'boolean':
+     return (
+        <Select
+          value={itemValue}
+          options={options}
+          onChange={handleSelectChange}
+          placeholder={placeholder || `请选择${name ?? ''}`}
+        />
+      );
     default:
       return (
         <Input

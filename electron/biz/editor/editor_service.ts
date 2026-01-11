@@ -3,6 +3,7 @@ import ComponentPropertTypeDO from "@/lib/Model/Editor/ComponentPropertyTypeDO";
 import NodeDO from "@/lib/Model/Editor/NodeDO";
 import { AgentService } from "../base/agent_service";
 
+
 enum InputType{
     Text = 1,
     TextArea = 2,
@@ -12,7 +13,11 @@ enum InputType{
     Option = 6,
     File = 7,
     Label = 8,
-    TargetElement = 9
+    TargetElement = 9,
+    Variable = 10,
+    SelectFile = 11,
+    SaveFile = 12,
+    Folder = 13 
 }
 
 enum DirectionType{
@@ -69,6 +74,7 @@ export class EditorService {
                     description: field.description,
                     inputType: this.turnInputType(field.input_type),
                     type: this.turnFieldType(field.field_type),
+                    params: field.params,
                     options: field['options'] || [],
                     direction: field['direction'] || 0
                 };
@@ -94,6 +100,22 @@ export class EditorService {
                 return "select";
             case InputType.TextArea:
                 return "textarea";
+            case InputType.Boolean:
+                return "boolean";
+            case InputType.File:
+                return "file";
+            case InputType.Label:
+                return "label";
+            case InputType.Variable:
+                return "variable";
+            case InputType.Option:
+                return "option";
+            case InputType.Folder:
+                return "folder";
+            case InputType.SaveFile:
+                return 'saveFile';
+            case InputType.SelectFile:
+                return 'selectrFile';
             default:
                 return "text";
         }
