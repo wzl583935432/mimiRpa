@@ -4,6 +4,7 @@ import  Home from '@/app/components/home/Home';
 // 假设这些依赖的路径是正确的
 import { useProjectEditorStore } from '@/app/components/store/HomeStore';
 import Editor from '@/app/components/editor/Editor';
+import Test from '@/app/components/test/Test';
 
 
 interface Tab {
@@ -16,6 +17,7 @@ interface Tab {
 // 标签数据结构：包含 ID、标题和内容（可以是任何 React 元素）
 const initialTabData: Tab[] = [
   { id: 'home', title: '首页', content: <Home/> },
+  {id: 'test', title: '测试', content: <Test/>},
 ];
 
 const MainTab = () => {

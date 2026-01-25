@@ -8,6 +8,7 @@ import json
 from dataclasses import asdict
 from enum import Enum
 from importlib.metadata import entry_points
+from loguru import logger
 
 class ComponetsService:
     _instance = None
@@ -16,6 +17,7 @@ class ComponetsService:
     ws_context = None
     _whl_files:list = []
     b_initialized = False
+    _activity_cache ={}
 
     def __new__(cls):
         if not cls._instance:
@@ -85,10 +87,10 @@ class ComponetsService:
         self.b_initialized = True
         print("组件加载完成")
 
-    def query_components(self)-> list:
+    def cache_components(self):
         self._load_component_whl()
         files = self._whl_files
-        properties = []
+
         for file in files:
             #print(file)
             group = self._whl_path_to_group(file)
@@ -96,9 +98,11 @@ class ComponetsService:
             # 获取所有 entry points
             for ep in entry_points(group=group):
                 plugin_cls = ep.load()
-                plugin = plugin_cls()
-                print('Loaded plugin:', plugin)
-                info = plugin.get_node_info()  
-                properties.append(self._serialize_field_info(info))
-                print(self._serialize_field_info(info))      
-        return properties
+                key = ep.name
+                logger.info(f"组件{key}   {plugin_cls}")
+                self._activity_cache[key] = plugin_cls
+    
+    def get_component(self, activity_name:str):
+        if activity_name in self._activity_cache:
+            return self._activity_cache[activity_name]
+        return None

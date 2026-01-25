@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { createAppWindow } from './app'
+import {AppService} from '@/electron/biz/app_service'
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -10,7 +11,7 @@ app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.electron')
   // Create app window
   createAppWindow()
-
+  AppService.getInstance().init();
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils

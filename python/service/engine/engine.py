@@ -1,6 +1,7 @@
 
 import os
 import sys
+from .biz.componets_service import ComponetsService
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.join(current_dir, '..', '..')
 sys.path.insert(0, project_root)
@@ -35,6 +36,7 @@ def set_log():
 def main():
     change_to_app_dir()
     set_log()
+    ComponetsService().get_instance().cache_components()
     t = threading.Thread(target=EngineApplication().start, daemon=True)
     t.start()
     TkWindowManager().start()

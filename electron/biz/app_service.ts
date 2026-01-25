@@ -20,8 +20,7 @@ export class AppService {
 
     public init(){
         // 初始化应用相关服务
-        
-    
+        this.basePath = path.resolve();
     }
 
     public setBasePath(basePath:string){

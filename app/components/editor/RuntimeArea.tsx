@@ -14,7 +14,7 @@ const RuntimeArea: React.FC<RunTimeProb> = ( {setCollapsed}) => {
     console.log("isBottomCollapsed", isBottomCollapsed)
   }
   return (
-    <div className="menuArea-container">
+    <div>
           <button 
             className="toggle-btn bottom-toggle"
             onClick={handleOnCollapsed}
