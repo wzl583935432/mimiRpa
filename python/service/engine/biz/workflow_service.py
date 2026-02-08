@@ -33,6 +33,9 @@ class WorkflowService:
     def get_start_graph(self) -> GraphBiz:
         return  self._graph_cache['main'] 
     
+    def get_graph(self, graph_id:str) -> GraphBiz:
+        return self._graph_cache.get(graph_id, None)
+    
     def get_node_properties(self, node_id)->Dict[str, Dict]:
         if node_id in self._node_properties:
             return self._node_properties[node_id]

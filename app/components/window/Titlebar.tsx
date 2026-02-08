@@ -42,7 +42,7 @@ export const Titlebar = () => {
       >
         {title}
       </div>
-      {menusVisible && <TitlebarMenu />}
+      { /* menusVisible && <TitlebarMenu/> */}
       {wcontext?.platform === 'win32' && <TitlebarControls />}
     </div>
   )

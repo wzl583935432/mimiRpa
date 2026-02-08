@@ -201,7 +201,7 @@ const CanvasArea = forwardRef<CRefHandle, CanvasProps>(({ graphId, projectId, ve
 
       const cells = graph.getSelectedCells()
       if (cells.length) {
-        for(const cell in cells){
+        for(const cell of cells){
           const cellitem = cell as any;
           if (cellitem?.isNode()) {
             await workflowEditorBiz.DeleteNode(cellitem.getData()?.nodedata.id)
@@ -292,7 +292,7 @@ const CanvasArea = forwardRef<CRefHandle, CanvasProps>(({ graphId, projectId, ve
 
   const getStartNode = (graph: Graph) => {
   return graph.getNodes().find(node => {
-    return node.getData()?.componentTypeId === 'start';
+    return node.getData()?.nodedata.componentTypeId === 'start';
   });
 }
 

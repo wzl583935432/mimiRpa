@@ -11,7 +11,7 @@ class EngineController:
         try:
             logger.info(msg)
             logger.info("***** start_workflow", msg)
-            EngineService().get_instance().start_run_workflow(msg)
+            await EngineService().get_instance().start_run_workflow(msg)
             ##workflow.start()
         except Exception as e:
             logger.error(f"Failed to start workflow: {e}")

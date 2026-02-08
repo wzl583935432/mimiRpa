@@ -52,7 +52,7 @@ class EngineService:
         
         return cls
     
-    def start_run_workflow(self, msg):
+    async def start_run_workflow(self, msg):
         logger.info('-------------start_run_workflow-')
         logger.info(msg)
         logger.info('-------------start_run_workflow-')
@@ -68,8 +68,8 @@ class EngineService:
             WorkflowService().get_instance().insert_property(node_property['nodeId'], node_property)
 
         graphbiz = WorkflowService().get_instance().get_start_graph()
-
-        asyncio.run(self.run(graph=graphbiz))
+        await self.run(graph=graphbiz)
+        #asyncio.run()
         
         
     async def run(self, graph:GraphBiz):

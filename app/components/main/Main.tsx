@@ -5,7 +5,7 @@ import './Main.css';
 
 // Main 组件现在是一个函数组件
 const Main: React.FC = () => {
- 
+   document.documentElement.classList.toggle('dark')
   // 在函数组件中，render 逻辑直接作为函数的返回值。
   // activePage 的类型是通过 useState 泛型参数 <string> 确定的，
   // 所以我们不再需要 MainState 接口。
