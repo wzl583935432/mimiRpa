@@ -173,7 +173,7 @@ export const InputRenderControl: React.FC<InputRenderControlProps> = ({
           <Input
             placeholder="输入文件"
             value={itemValue}
-            onChange={handleSelectChange}
+            onChange={ (e) => handleSelectChange(e.target.value)}
           />
 
           <Upload

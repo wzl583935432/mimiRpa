@@ -1,5 +1,6 @@
 import threading
 from dataclasses import dataclass, asdict
+import traceback
 from .models.start_parameters import StartParameters
 import json
 from loguru import logger
@@ -8,6 +9,7 @@ from .workflow_service import WorkflowService
 import asyncio
 from .graph_biz import GraphBiz
 from .running_pc import RunningPC
+import types
 
 class EngineService:
     _instance = None
@@ -71,8 +73,41 @@ class EngineService:
         await self.run(graph=graphbiz)
         #asyncio.run()
         
-        
+    async def engine_run(self, script_str, graphId:str = None):
+        try:
+            logger.info(f"__name__ ---- {__name__}")
+            current_packege = __package__
+            logger.info(f"current_packege ---- {current_packege}")  
+            graphId_str = graphId.replace('-', '_') if graphId else "main"
+            # 创建独立模块环境
+            module = types.ModuleType(f"{current_packege}.engine_service_{graphId_str}")
+            module.__dict__["__name__"] = f"{current_packege}.engine_service_{graphId_str}"
+            module.__dict__["__package__"] = current_packege
+
+            # 执行脚本
+            exec(script_str, module.__dict__)
+
+            # 获取 run 函数
+            main_func = module.__dict__.get("run")
+            if main_func is None:
+                raise ValueError("脚本中未定义 run()")
+            logger.info(f"执行函数 ---- {main_func}")
+            # 加超时保护（非常重要）
+            result = await asyncio.wait_for(main_func(), timeout=60)
+
+            return result
+
+        except asyncio.TimeoutError:
+            logger.error("脚本执行超时")
+            raise
+
+        except Exception as e:
+            logger.error("脚本执行异常:\n" + traceback.format_exc())
+            raise
+
     async def run(self, graph:GraphBiz):
-        running_pc = RunningPC(None, graph_biz= graph)
-        await running_pc.run()
+        script_str = graph.build_code()
+        logger.info(f"执行脚本 ---- {script_str}")
+        #running_pc = RunningPC(None, graph_biz= graph)
+        await self.engine_run(script_str, graphId=graph.get_graph_id())
         

@@ -1,4 +1,5 @@
-
+import sys
+import os
 var = 0
 def test():
     print("test var")
@@ -14,11 +15,20 @@ def test2():
     #var = var + 1
     print(var)
     #assert var == 2
-
 #var = 0
 print (__name__)
 if __name__ == "__main__":
+    sys.path.append(os.getcwd())
+    script = """
+from test import test, test2
+test()
+test2()
+print("main")"""
+    namespace = {}
+    print("执行脚本")
+    exec(script, namespace)
 
-    test()
-    test()
-    print("main")
+    print(namespace.keys())
+    #test()
+    #test()
+    #print("main")

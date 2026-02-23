@@ -1,6 +1,7 @@
 import threading
 from pathlib import Path 
 from .setting_service import SettingService
+from .components.start_activity import StartActivity
 import zipfile
 import os
 import sys
@@ -90,15 +91,16 @@ class ComponetsService:
     def cache_components(self):
         self._load_component_whl()
         files = self._whl_files
-
+        logger.info(f"发现组件文件: {files}")
+        self._activity_cache['start'] = StartActivity
         for file in files:
             #print(file)
             group = self._whl_path_to_group(file)
-            print(f"组件 {file} 对应的 entry point group 为: {group}")
+            logger.info(f"组件 {file} 对应的 entry point group 为: {group}")
             # 获取所有 entry points
             for ep in entry_points(group=group):
                 plugin_cls = ep.load()
-                key = ep.name
+                key = plugin_cls.__name__
                 logger.info(f"组件{key}   {plugin_cls}")
                 self._activity_cache[key] = plugin_cls
     

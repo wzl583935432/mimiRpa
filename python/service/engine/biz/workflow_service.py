@@ -1,5 +1,6 @@
 from typing import Dict, Any
 from .graph_biz import GraphBiz
+from loguru import logger
 import threading
 
 class WorkflowService:
@@ -28,7 +29,7 @@ class WorkflowService:
             return
         if nodeId not in self._node_properties:
             self._node_properties[nodeId] = {}
-        self._node_properties[nodeId][prop_name] = property
+        self._node_properties[nodeId][prop_name] = property['propertyValue']
 
     def get_start_graph(self) -> GraphBiz:
         return  self._graph_cache['main'] 
@@ -37,6 +38,8 @@ class WorkflowService:
         return self._graph_cache.get(graph_id, None)
     
     def get_node_properties(self, node_id)->Dict[str, Dict]:
+        logger.info(f"获取节点 {node_id} 的属性")
+        logger.info(f"当前节点属性缓存 {self._node_properties}")
         if node_id in self._node_properties:
             return self._node_properties[node_id]
         return None

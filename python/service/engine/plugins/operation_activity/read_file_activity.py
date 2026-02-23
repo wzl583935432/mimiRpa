@@ -17,11 +17,12 @@ class ReadFileActivity(BaseActivity):
     def __init__(self):
         super().__init__()
         self.original_name = self._final_activity_decorate_name
+        self.display_name = self._final_activity_decorate_name
         self.file_path = ""
 
     def before(self):
         return super().before()
-    def run(self):
+    async def run(self):
         super().run()
         self.result = self.read()
 
@@ -33,6 +34,6 @@ class ReadFileActivity(BaseActivity):
         if os.path.isfile(self.file_path) == False:
             raise ActivityException(f"文件未找到: {self.file_path}", 'FILE_NOT_FOUND')
 
-        with open(self.file_path, 'r', encoding='utf-8') as file:
+        with open(self.file_path, 'r', encoding='utf-8', errors='ignore') as file:
             content = file.read()
         return content

@@ -29,7 +29,7 @@ class BaseActivity:
     def before(self):
         print(f"Starting activity: {self.display_name}")
 
-    def run(self):
+    async def run(self):
         print(f"Running activity: {self.display_name}")
 
     def end(self):

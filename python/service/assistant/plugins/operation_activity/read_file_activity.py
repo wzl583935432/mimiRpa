@@ -33,6 +33,6 @@ class ReadFileActivity(BaseActivity):
         if os.path.isfile(self.file_path) == False:
             raise ActivityException(f"文件未找到: {self.file_path}", 'FILE_NOT_FOUND')
 
-        with open(self.file_path, 'r', encoding='utf-8') as file:
+        with open(self.file_path, 'r', encoding='utf-8', errors='ignore') as file:
             content = file.read()
         return content

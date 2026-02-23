@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from loguru import logger
 from io import StringIO
 from .variable_service import VaribleService
-from .workflow_service import WorkflowService
 
 @dataclass
 class NodeInfo:
@@ -29,6 +28,9 @@ class GraphBiz:
         cells = graph_map['cells']
         self._parse(cells=cells)
         pass
+
+    def get_graph_id(self):
+        return self._graph_id
 
     def _parse(self, cells):
         for cell in cells:
@@ -67,6 +69,11 @@ class GraphBiz:
         
         return self._node_cache[self._start_node]
         
+    def get_node(self, node_id:str):
+        if node_id in self._node_cache:
+            return self._node_cache[node_id]
+        return None
+    
 
     
     def get_next_activite(self, current_node_id:str, param:str):
@@ -82,21 +89,21 @@ class GraphBiz:
     
     def build_code(self) -> str:
         buf = StringIO() 
-        if self._graph_id == 'main':
-            VaribleService().get_instance().build_global_variable_code(buf)
-        else:
-            VaribleService().get_instance().build_global_variable_code(buf)
-            VaribleService().get_instance().build_local_variable_code(buf, self._graph_id)
+
+        VaribleService().get_instance().build_global_variable_code(buf)
+        VaribleService().get_instance().build_local_variable_code(buf, self._graph_id)
 
         buf.write("\n")
         buf.write("import asyncio\n")
         buf.write("from .componets_service import ComponetsService\n")
         buf.write("func_map = {} \n")
+        self.build_next_node_code(buf)
 
         for node_id, node_info in self._node_cache.items():
             self.build_node_code(buf, node_id)
 
         buf.write("\n")
+        # 构建主函数运行代码
         buf.write("async def run():\n")
         first_node = self.get_first_activite()
         if first_node == None:
@@ -106,15 +113,22 @@ class GraphBiz:
             buf.write(f"    g = GlobalVaribles()\n")
             buf.write(f"    l = LocalVaribles()\n")
             buf.write(f"    current_node_id = '{first_node.id}'\n")
-            buf.write(f"    while(true)\n")
+            buf.write(f"    from .workflow_service import WorkflowService\n")
+            buf.write(f"    while(True):\n")
+            #执行节点并获取结果
+            buf.write(f"        graph = WorkflowService().get_instance().get_graph('{self._graph_id}')\n")
+            buf.write(f"        if graph is None:\n")
+            buf.write(f"            raise ValueError('未找到图')\n")
+            buf.write(f"        node_info = graph.get_node(current_node_id)\n")
+            buf.write(f"        if node_info is None:\n")
+            buf.write(f"            raise ValueError('未找到节点')\n")
+            buf.write(f"        componentTypeId = node_info.node_data['componentTypeId']\n")
             buf.write(f"        result = await func_map['node_'+current_node_id](g=GlobalVaribles(), l=LocalVaribles())\n")
             buf.write(f"        current_node_id = get_next_node(current_node_id, componentTypeId, result)\n")
             buf.write(f"        if current_node_id is None:\n")
             buf.write(f"            break\n")
             buf.write(f"    pass\n")
             buf.write("\n")
-        buf.write("if __name__ == '__main__':\n")
-        buf.write("    asyncio.run(run())\n")
         return buf.getvalue()
         pass
 
@@ -126,6 +140,7 @@ class GraphBiz:
     def build_next_node_code(self, buf:StringIO):
         buf.write("# 构建后续节点代码\n")
         buf.write("def get_next_node(current_node_id, componentTypeId, result):\n")
+        buf.write("    from .workflow_service import WorkflowService\n")
         buf.write("    # 根据当前节点ID和组件类型以及结果来决定下一个节点\n")
         buf.write(f"    graph = WorkflowService().get_instance().get_graph('{self._graph_id}')\n")
         buf.write("    if graph is None:\n")
@@ -145,27 +160,33 @@ class GraphBiz:
 
 
     def build_node_code(self, buf:StringIO, node_id:str):
-        buf.write(f"# 节点 {node_id} 代码\n")
-        buf.write("from .componets_service import ComponetsService\n")
+        from .workflow_service import WorkflowService
+        node_id_ = node_id.replace("-", "_")
+        buf.write(f"# 节点 {node_id_} 代码\n")
+        #buf.write("from .componets_service import ComponetsService\n")
         node_info = self._node_cache[node_id]
-        buf.write(f"async def node_{node_id}(g, l):\n")
+        buf.write(f"async def node_{node_id_}(g, l):\n")
         buf.write(f"    # 获取组件类\n")
         buf.write(f"    componentTypeId = '{node_info.node_data['componentTypeId']}'\n")
         buf.write(f"    activity_cls = ComponetsService().get_instance().get_component(componentTypeId)\n")
+        buf.write(f"    if activity_cls is None:\n")
+        buf.write(f"        # 如果没有找到组件类，抛出异常\n")
+        buf.write(f"        raise ValueError('未找到组件类 componentTypeId:' + componentTypeId)\n")
         buf.write(f"    activity = activity_cls()\n")
-        properties = WorkflowService().get_instance().get_node_properties(node_info.node_data['id'])
-        for key, val in properties.items:
-            if key == "result":
-                continue
-            buf.write(f"    activity.{key} = {val}\n")
-        buf.write(f"    await activity.execute()\n")
+        logger.info(f"构建节点 {node_id} 代码")
+        properties = WorkflowService().get_instance().get_node_properties(node_id)
+        if properties is not None:
+            for key, val in properties.items():
+                if key == "result":
+                    continue
+                buf.write(f"    activity.{key} = {val}\n")
+        buf.write(f"    await activity.run()\n")
         buf.write(f"    result = activity.result\n")
-        if 'result' in properties:
+        if properties is not None and 'result' in properties:
             buf.write(f"    # 处理结果变量 {properties['result']}\n")
             buf.write(f"    {properties.get('result')} = result\n")
         buf.write(f"    return result\n")
-        buf.write(f"func_map['node_{node_id}'] = node_{node_id} \n")
-
+        buf.write(f"func_map['node_{node_id}'] = node_{node_id_} \n")
 
     def _build_variable_code(self, variable_name:str, variable_value:str):
         code = f"{variable_name} = {variable_value}"

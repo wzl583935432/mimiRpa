@@ -38,6 +38,8 @@ class VaribleService:
         buf.write("from dataclasses import dataclass\n")
         buf.write("@dataclass\n")
         buf.write("class GlobalVaribles:\n")
+        buf.write("    # 这里定义全局变量\n")
+        buf.write("    __default_dict__ = {}\n")
 
         for variable_name, variableInfo in self.global_varibles.items():
             buf.write(f"    {variable_name}:{variableInfo.variable_type} = {variableInfo.variable_value} \n")
@@ -50,9 +52,12 @@ class VaribleService:
         buf.write("# 局部变量\n")
         buf.write("@dataclass\n")
         buf.write("class LocalVaribles:\n")
+        buf.write("    # 这里定义局部变量\n")
+        buf.write("    __default_dict__ = {}\n")
         current_graph_local_varibles = self.local_varibles.get(graph_id, {})
-        for variable_name, variableInfo in current_graph_local_varibles.items():
-            buf.write(f"    {variable_name}:{variableInfo.variable_type} = {variableInfo.variable_value} \n")
+        if current_graph_local_varibles is not None:
+            for variable_name, variableInfo in current_graph_local_varibles.items():
+                buf.write(f"    {variable_name}:{variableInfo.variable_type} = {variableInfo.variable_value} \n")
 
         buf.write("\n")
         return buf
