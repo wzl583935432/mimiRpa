@@ -6,6 +6,7 @@ import os
 import sys
 import json
 from dataclasses import asdict
+from loguru import logger
 from enum import Enum
 from importlib.metadata import entry_points
 
@@ -97,8 +98,8 @@ class ComponetsService:
             for ep in entry_points(group=group):
                 plugin_cls = ep.load()
                 plugin = plugin_cls()
-                print('Loaded plugin:', plugin)
+                logger.info(f'Loaded plugin: {plugin}')
                 info = plugin.get_node_info()  
                 properties.append(self._serialize_field_info(info))
-                print(self._serialize_field_info(info))      
+                logger.info(f'Serialized info: {self._serialize_field_info(info)}')
         return properties

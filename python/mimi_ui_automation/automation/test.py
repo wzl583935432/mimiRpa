@@ -1,9 +1,9 @@
-from ui_automation_select import UIAutomationSelect
+from .ui_automation_select import UIAutomationSelect
 import tkinter as tk
 import json
 import uiautomation as uia
 from common.tk_window_manager  import TkWindowManager
-from web_ui_automation_select import WebUIAutomationSelect
+from .web_ui_automation_select import WebUIAutomationSelect
 import threading
 import time
 

@@ -5,3 +5,7 @@ components_ui.egg-info/dependency_links.txt
 components_ui.egg-info/entry_points.txt
 components_ui.egg-info/requires.txt
 components_ui.egg-info/top_level.txt
+ui_activity/__init__.py
+ui_activity/click_element_activity.py
+ui_activity/get_value_activity.py
+ui_activity/input_activity.py

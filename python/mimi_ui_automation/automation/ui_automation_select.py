@@ -54,6 +54,12 @@ class UIAutomationSelect:
 
         pass
 
+    def click_select_element_target(self, call_info:CallInfo):
+        logger.info("click select element")
+        
+
+        pass
+
     def _finish_select_web_target(self, is_sucess, web_target:WebTargetElement|None):
         data ={}
         data['type'] = 'web'

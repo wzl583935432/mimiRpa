@@ -34,6 +34,42 @@ class BaseActivity:
 
     def end(self):
         print(f"Stopping activity: {self.display_name}")
+
+    @classmethod
+    def get_node_skill(cls):
+        return []
+#{
+#  "name": "memory_search",
+# "description": "Search stored memories for relevant information",
+#  "inputSchema": {
+#   "type": "object",
+#    "properties": {
+#     "query": { "type": "string" }
+#  },
+#   "required": ["query"]
+# }
+#}
+# skills/search_web.ts
+#export const skill = {
+#  name: "search_web",
+#
+#  description: "Search information from the internet",
+#
+#  parameters: {
+#    type: "object",
+#    properties: {
+#      query: {
+#        type: "string",
+#        description: "Search keywords"
+#      }
+#    },
+#    required: ["query"]
+#  },
+#
+#  execute: async ({ query }) => {
+#    return await search(query)
+#  }
+#}
     
     @classmethod
     def get_node_info(cls) -> ActivityNodeInfo:

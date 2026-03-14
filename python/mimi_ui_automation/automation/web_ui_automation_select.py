@@ -82,16 +82,7 @@ class WebUIAutomationSelect:
                             result = await self._get_element_on_point(request_object.config, request_object.requestData)
                             request_object.responseData = result
                             request_object.response_event.set()
-                            
-                        elif request_object.messageCode == 'start_select_element_target':
-                            print('pstart_select_element_target')
-                            await self._start_select_element_target(request_object.config)
-                            pass
-                        elif request_object.messageCode == 'stop_select_element_target':
-                            print('stop_select_element_target')
-                            await self._stop_select_element_target(request_object.config)
-                            pass
-                    
+
                     except Exception as e:
                         traceback.print_exc()
                         logger.warning(f"playwright 线程处理异常 {e}")
