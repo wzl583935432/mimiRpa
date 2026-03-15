@@ -19,7 +19,7 @@ class SelectController:
 
     async def dispatchMessage(self, socket, msg):
         handler = self.route.get(msg.get('requestCode'))
-        logger.info('---------dispatchMessage----------')
+        logger.info('---------dispatchMessage-----------')
         if handler:
             logger.info('找到元素选择的函数')
             # 调用业务代码处理消息
