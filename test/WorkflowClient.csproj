@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>   <!-- 显式 using，避免隐式引入干扰 -->
+    <LangVersion>10</LangVersion>              <!-- C# 10，.NET 6 默认语言版本  -->
+    <AssemblyName>WorkflowClient</AssemblyName>
+    <RootNamespace>WorkflowClient</RootNamespace>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WebSocket 客户端 -->
+    <PackageReference Include="Websocket.Client"                       Version="4.6.1" />
+    <!-- JSON -->
+    <PackageReference Include="Newtonsoft.Json"                        Version="13.0.3" />
+    <!-- 日志 -->
+    <PackageReference Include="Microsoft.Extensions.Logging"           Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console"   Version="6.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -7,3 +7,10 @@ out
 temp
 /service/agent/__pycache__/application.cpython-312.pyc
 /python/service/tests/plugins/plugin/operation_activity/__pycache__
+/test/bin
+/test/obj
+/python/service/assistant/controller/__pycache__
+/python/service/assistant/plugins/operation_activity/__pycache__
+/python/service/assistant/plugins/operation_activity/__pycache__
+/python/service/assistant/plugins/ui_activity/__pycache__
+/python/service/assistant/plugins/ui_activity/__pycache__
